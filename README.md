@@ -1,9 +1,9 @@
 # 🏆 La Copa Final
 
-![GitHub Repo Size](https://img.shields.io/github/repo-size/tu-usuario/la-copa-final) 
-![GitHub last commit](https://img.shields.io/github/last-commit/tu-usuario/la-copa-final) 
-![GitHub issues](https://img.shields.io/github/issues/tu-usuario/la-copa-final) 
-![License](https://img.shields.io/github/license/tu-usuario/la-copa-final) 
+![Node.js](https://img.shields.io/badge/Backend-Node.js-green?logo=node.js&logoColor=white) 
+![MySQL](https://img.shields.io/badge/DB-MySQL-blue?logo=mysql&logoColor=white) 
+![Chart.js](https://img.shields.io/badge/Charts-Chart.js-orange?logo=chart.js&logoColor=white) 
+![Docker](https://img.shields.io/badge/Container-Docker-blue?logo=docker&logoColor=white) 
 
 **La Copa Final** es una web para competir entre amigos en fiestas, registrando en tiempo real quién bebe más y determinando al ganador de la noche. 🍻🥃
 
