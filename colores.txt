@@ -1,0 +1,5 @@
+Fondo azul marino: #2C3E50
+Azul claro/celeste: #3498DB
+Blanco: #FFFFFF
+Negro: #000000
+Rosa/magenta: #E91E63 o #FF1493
