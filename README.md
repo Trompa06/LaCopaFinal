@@ -9,6 +9,24 @@
 
 ---
 
+## 📑 Tabla de Contenidos
+
+- [📌 Funcionalidades Principales](#-funcionalidades-principales)  
+  - [1️⃣ Registro de bebidas](#1️⃣-registro-de-bebidas)  
+  - [2️⃣ Conversión de alcohol a unidades estándar](#2️⃣-conversión-de-alcohol-a-unidades-estándar)  
+  - [3️⃣ Inicio de la competencia](#3️⃣-inicio-de-la-competencia)  
+  - [4️⃣ Rankings en tiempo real](#4️⃣-rankings-en-tiempo-real)  
+  - [5️⃣ Historial de fiestas](#5️⃣-historial-de-fiestas)  
+  - [6️⃣ Gamificación: Ranking por hora (Crono 60 min)](#6️⃣-gamificación-ranking-por-hora-crono-60-min)  
+  - [7️⃣ Compatibilidad móvil](#7️⃣-compatibilidad-móvil)  
+- [💻 Tecnologías Utilizadas](#-tecnologías-utilizadas)  
+- [⚙️ Cómo Funciona](#️-cómo-funciona)  
+- [🚀 Futuras Mejoras](#-futuras-mejoras)  
+- [⚠️ Advertencia](#⚠️-advertencia)  
+- [📸 Screenshots](#-screenshots-opcional)  
+
+---
+
 ## 📌 Funcionalidades Principales
 
 ### 1️⃣ Registro de bebidas
@@ -54,11 +72,10 @@
 
 ## 💻 Tecnologías Utilizadas
 
-- **Frontend:** HTML, CSS, JavaScript  
-- **Backend:** Node.js  
-- **Base de datos:** MySQL  
-- **Gráficos en tiempo real:** Chart.js  
-- **Tecnologías adicionales:** Docker  
+- ![Node.js](https://img.shields.io/badge/Backend-Node.js-green?logo=node.js&logoColor=white) Node.js  
+- ![MySQL](https://img.shields.io/badge/DB-MySQL-blue?logo=mysql&logoColor=white) MySQL  
+- ![Chart.js](https://img.shields.io/badge/Charts-Chart.js-orange?logo=chart.js&logoColor=white) Chart.js  
+- ![Docker](https://img.shields.io/badge/Container-Docker-blue?logo=docker&logoColor=white) Docker  
 
 ---
 
