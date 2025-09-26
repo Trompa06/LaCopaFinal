@@ -1,3 +1,25 @@
+// ...existing code...
+// Endpoint para ranking global de todas las fiestas (historial global)
+app.get('/api/global/ranking', async (req, res) => {
+    try {
+        // Ranking global: suma total de unidades por usuario en todas las fiestas finalizadas
+        const [ranking] = await db.execute(`
+            SELECT 
+                u.id_usuario,
+                u.nombre,
+                COALESCE(SUM(h.total_unidades), 0) as total_unidades,
+                COUNT(DISTINCT h.id_fiesta) as fiestas_participadas
+            FROM historial_fiestas h
+            JOIN usuarios u ON h.id_usuario = u.id_usuario
+            GROUP BY u.id_usuario, u.nombre
+            ORDER BY total_unidades DESC
+        `);
+        res.json({ success: true, ranking });
+    } catch (error) {
+        console.error('Error al obtener ranking global:', error);
+        res.status(500).json({ success: false, message: 'Error del servidor' });
+    }
+});
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');

@@ -250,6 +250,10 @@
         <div class="container">
             <div class="history-card">
                 <h2>Historial de Fiestas 📊</h2>
+                <div class="filter-buttons" style="margin-bottom: 20px;">
+                    <button id="btnPersonalHistory" class="btn btn-primary" onclick="toggleHistory('personal')">Personal</button>
+                    <button id="btnGlobalHistory" class="btn btn-secondary" onclick="toggleHistory('global')">Global</button>
+                </div>
                 <div id="historyList"></div>
                 <button onclick="showMainMenu()" class="btn-secondary">Volver</button>
             </div>

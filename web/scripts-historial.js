@@ -1,3 +1,64 @@
+// Alternar entre historial personal y global
+let currentHistoryView = 'personal';
+
+function toggleHistory(view) {
+    currentHistoryView = view;
+    const btnPersonal = document.getElementById('btnPersonalHistory');
+    const btnGlobal = document.getElementById('btnGlobalHistory');
+    if (view === 'personal') {
+        btnPersonal.classList.add('btn-primary');
+        btnPersonal.classList.remove('btn-secondary');
+        btnGlobal.classList.remove('btn-primary');
+        btnGlobal.classList.add('btn-secondary');
+        loadHistory();
+    } else {
+        btnGlobal.classList.add('btn-primary');
+        btnGlobal.classList.remove('btn-secondary');
+        btnPersonal.classList.remove('btn-primary');
+        btnPersonal.classList.add('btn-secondary');
+        loadHistoryGlobal();
+    }
+}
+// Ranking global de todas las fiestas
+async function loadHistoryGlobal() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '<div class="loading-parties"><div class="loading-spinner"></div><p>Cargando ranking global...</p></div>';
+    try {
+        const response = await fetch('/api/global/ranking');
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message);
+        const ranking = data.ranking;
+        if (!ranking || ranking.length === 0) {
+            historyList.innerHTML = '<div class="no-parties"><h3>No hay datos globales</h3><p>Aún no hay fiestas finalizadas suficientes para mostrar el ranking global.</p></div>';
+            return;
+        }
+        // Renderizar tabla tipo ranking global con podio
+        historyList.innerHTML = `
+            <div class="ranking-list">
+                <div class="ranking-item" style="font-weight:bold; background: #181B2A;">
+                    <div style="flex:2;">Usuario</div>
+                    <div style="flex:1;">Fiestas</div>
+                    <div style="flex:1;">Total</div>
+                    <div style="flex:2;">Podio</div>
+                </div>
+                ${ranking.map((item, idx) => `
+                    <div class="ranking-item${currentUser && item.id_usuario === currentUser.id ? ' current-user' : ''}">
+                        <div style="flex:2;">${item.nombre}</div>
+                        <div style="flex:1;">${item.fiestas_participadas}</div>
+                        <div style="flex:1; color:#FFD700; font-weight:bold;">${item.total_unidades}</div>
+                        <div style="flex:2; display:flex; gap:8px; align-items:center; justify-content:center;">
+                            ${idx < 3 ? `<span style="display:inline-block; min-width:60px; text-align:center; font-weight:bold; color:${idx===0?'#FFD700':idx===1?'#C0C0C0':'#CD7F32'}; font-size:${idx===0?'1.2em':'1em'};">
+                                ${idx===0?'🥇':idx===1?'🥈':'🥉'}<br>${item.nombre}<br>${item.total_unidades}
+                            </span>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } catch (e) {
+        historyList.innerHTML = `<div class='no-parties'><h3>Error</h3><p>${e.message || 'No se pudo cargar el ranking global.'}</p></div>`;
+    }
+}
 // scripts-historial.js
 // Lógica para mostrar el historial de fiestas finalizadas
 
@@ -73,5 +134,6 @@ async function loadHistory() {
 function showHistory() {
     hideAllScreens();
     document.getElementById('historyScreen').style.display = 'flex';
-    loadHistory(); // Debe ser loadHistory, no loadHistoryRanking
+    // Por defecto mostrar historial personal
+    toggleHistory('personal');
 }
