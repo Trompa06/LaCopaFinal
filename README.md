@@ -34,7 +34,7 @@
   - 🍺 Cerveza  
   - 🥃 Cubata  
   - 🍹 Cubalitro  
-  - 🍓 Xupito suave (ej. tequila de fresa)  
+  - 🥃 Xupito suave (ej. tequila de fresa)  
   - 🥃 Xupito fuerte (ej. whisky, anís, Jäger, tequila normal)  
 
 ### 2️⃣ Conversión de alcohol a unidades estándar
