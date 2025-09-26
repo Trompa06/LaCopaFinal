@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="winner.js"></script>
 </head>
 <body>
     <!-- Encabezado -->
@@ -86,8 +87,10 @@
             <div class="form-card">
                 <h2>Crear Nueva Fiesta 🎉</h2>
                 <input type="text" id="partyName" placeholder="Nombre de la fiesta" required>
-                <button onclick="createParty()" class="btn-primary">Crear Fiesta</button>
-                <button onclick="showMainMenu()" class="btn-secondary">Cancelar</button>
+                <div class="create-party-actions">
+                    <button onclick="createParty()" class="btn-primary">Crear Fiesta</button>
+                    <button onclick="showMainMenu()" class="btn-secondary">Cancelar</button>
+                </div>
                 
                 <div id="partyCode" class="party-code" style="display: none;">
                     <h3>¡Fiesta creada! 🎊</h3>

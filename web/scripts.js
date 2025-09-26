@@ -14,7 +14,7 @@ async function loadUserParties() {
             </div>
         `;
 
-        const response = await fetch(`/api/user/${currentUser.id_usuario}/parties`);
+    const response = await fetch(`/api/user/${currentUser.id}/parties`);
         const data = await response.json();
 
         if (data.success) {
@@ -49,14 +49,13 @@ function displayParties(parties) {
         const isCreator = party.es_creador === 1;
         const statusText = isActive ? 'Activa' : 'Finalizada';
         const statusClass = isActive ? 'active' : 'finished';
-        
+        // Añadimos un contenedor para el ganador
         return `
             <div class="party-card ${statusClass}" data-party-id="${party.id_fiesta}">
                 <div class="party-card-header">
                     <h3 class="party-name">${party.nombre_fiesta}</h3>
                     <span class="party-status ${statusClass}">${statusText}</span>
                 </div>
-                
                 <div class="party-details">
                     <div class="party-detail-row">
                         <span class="party-detail-label">Código:</span>
@@ -74,15 +73,12 @@ function displayParties(parties) {
                         <span class="party-detail-label">Creada:</span>
                         <span class="party-date">${formatDate(party.fecha_creacion)}</span>
                     </div>
+                    ${isActive ? `<div class='party-detail-row'><span class='party-detail-label'>Va ganando:</span> <span class='party-winner' id='winner-${party.id_fiesta}'>Cargando...</span></div>` : ''}
                 </div>
-                
                 <div class="party-actions">
                     ${isActive ? `
                         <button class="btn btn-success" onclick="joinPartyFromHistory('${party.codigo}')">
                             <i class="fas fa-sign-in-alt"></i> Entrar
-                        </button>
-                        <button class="btn btn-info" onclick="sharePartyCode('${party.codigo}')">
-                            <i class="fas fa-share"></i> Compartir
                         </button>
                         ${isCreator ? `
                             <button class="btn btn-danger" onclick="endPartyFromHistory(${party.id_fiesta})">
@@ -100,6 +96,18 @@ function displayParties(parties) {
     }).join('');
 
     partiesGrid.innerHTML = partiesHTML;
+
+    // Cargar el ganador para cada fiesta activa
+    parties.forEach(party => {
+        if (party.estado === 'activa') {
+            getWinnerName(party.id_fiesta).then(winner => {
+                const el = document.getElementById(`winner-${party.id_fiesta}`);
+                if (el) {
+                    el.textContent = winner ? winner : 'Sin datos';
+                }
+            });
+        }
+    });
 }
 
 function filterParties(filter) {
@@ -161,7 +169,7 @@ function formatDate(dateString) {
 async function joinPartyFromHistory(codigo) {
     try {
         // Use existing joinParty function but with code
-        document.getElementById('join-code').value = codigo;
+    document.getElementById('joinCode').value = codigo;
         await joinParty();
     } catch (error) {
         console.error('Error joining party from history:', error);
