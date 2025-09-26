@@ -104,4 +104,3 @@ CREATE TABLE historial_fiestas (
     FOREIGN KEY (id_fiesta) REFERENCES fiestas(id_fiesta),
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
 );
-

@@ -79,6 +79,18 @@
 
 ---
 
+## 🎨 Paleta de Colores
+
+La web usa una paleta pensada para equilibrio y contraste:
+
+- **Fondo principal:** Azul marino `#2C3E50`  
+- **Color primario:** Azul celeste `#3498DB`  
+- **Texto principal:** Blanco `#FFFFFF`  
+- **Texto secundario:** Negro `#000000`  
+- **Color de acento:** Magenta `#E91E63` (elegante) o `#FF1493` (más vibrante)  
+
+---
+
 ## ⚙️ Cómo Funciona
 
 1. Los usuarios pueden **crear una nueva fiesta** o **unirse a una existente** usando un código único. 👥  
