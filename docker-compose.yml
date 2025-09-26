@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: lacopa_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: lacopa123
+      MYSQL_DATABASE: LaCopaFinal
+      MYSQL_USER: lacopa_user
+      MYSQL_PASSWORD: lacopa_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./bd/BdEstructura.sql:/docker-entrypoint-initdb.d/01-estructura.sql
+      - ./bd/BdDatosScript.sql:/docker-entrypoint-initdb.d/02-datos.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+
+  # Node.js Application
+  app:
+    build: .
+    container_name: lacopa_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_USER: lacopa_user
+      DB_PASSWORD: lacopa_pass
+      DB_NAME: LaCopaFinal
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  mysql_data:
+    driver: local
