@@ -1,4 +1,4 @@
-// =======// My Parties functionality
+// =======// Funcionalidad de Mis Fiestas
 function showMyParties() {
     hideAllScreens();
     document.getElementById('myPartiesScreen').style.display = 'block';
@@ -245,14 +245,14 @@ async function viewPartyResults(partyId) {
 }
 
 // ===========================
-// Global Variables
+// Variables globales
 // ===========================
 let currentUser = null;
 let currentParty = null;
 let socket = null;
 
 // ===========================
-// Persistent State Management
+// Gestión de estado persistente
 // ===========================
 function savePartyState() {
     if (currentParty && currentUser) {
@@ -290,7 +290,7 @@ function clearPartyState() {
     localStorage.removeItem('activePartyState');
 }
 
-// Check if user should be redirected to active party
+// Comprobar si el usuario debe ser redirigido a una fiesta activa
 async function checkForActiveParty() {
     const savedState = loadPartyState();
     if (savedState && savedState.party && savedState.user) {
@@ -412,7 +412,7 @@ let drinkTypes = [];
 let charts = {};
 
 // ===========================
-// Initialize Application
+// Inicializar aplicación
 // ===========================
 document.addEventListener('DOMContentLoaded', async function() {
     hideLoading();
@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // ===========================
-// Socket.IO Functions
+// Funciones de Socket.IO
 // ===========================
 function initializeSocketConnection() {
     socket = io();
@@ -479,7 +479,7 @@ function initializeSocketConnection() {
 }
 
 // ===========================
-// Utility Functions
+// Funciones utilitarias
 // ===========================
 function showLoading() {
     document.getElementById('loading').style.display = 'flex';
@@ -499,7 +499,7 @@ function showToast(message, type = 'info') {
     }, 4000);
 }
 
-// Helper functions for different toast types
+// Funciones auxiliares para diferentes tipos de toast
 function showError(message) {
     showToast(message, 'error');
 }
@@ -526,7 +526,7 @@ function closeModal() {
 }
 
 // ===========================
-// Screen Navigation
+// Navegación de pantallas
 // ===========================
 function hideAllScreens() {
     const screens = document.querySelectorAll('.screen');
@@ -551,7 +551,7 @@ async function showMainMenu() {
     await checkForActiveParty();
 }
 
-// Alias for showMainMenu - used by back buttons
+// Alias de showMainMenu - usado por los botones de volver
 async function showHome() {
     await showMainMenu();
 }
@@ -611,7 +611,7 @@ function showHistory() {
 }
 
 // ===========================
-// Authentication Functions
+// Funciones de autenticación
 // ===========================
 function showLogin() {
     document.getElementById('loginForm').style.display = 'block';
@@ -733,7 +733,7 @@ function updateUserInfo() {
 }
 
 // ===========================
-// Party Functions
+// Funciones de fiesta
 // ===========================
 async function createParty() {
     const nombre = document.getElementById('partyName').value.trim();
@@ -1010,7 +1010,7 @@ function exitPartyCompletely() {
 }
 
 // ===========================
-// Drink Functions
+// Funciones de bebidas
 // ===========================
 async function loadDrinkTypes() {
     try {
@@ -1103,7 +1103,7 @@ async function addDrink(drinkTypeId) {
 }
 
 // ===========================
-// Rankings Functions
+// Funciones de rankings
 // ===========================
 async function loadRankings() {
     if (!currentParty) return;
@@ -1262,7 +1262,7 @@ async function loadParticipants() {
 }
 
 // ===========================
-// Chart Functions
+// Funciones de gráficos
 // ===========================
 function updateGeneralChart(data) {
     const ctx = document.getElementById('generalChart').getContext('2d');
@@ -1373,7 +1373,7 @@ function update60MinChart(data) {
 }
 
 // ===========================
-// Tab Functions
+// Funciones de pestañas
 // ===========================
 function showRankingTab(tabName) {
     // Hide all ranking contents
