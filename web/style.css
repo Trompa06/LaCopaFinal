@@ -1,5 +1,5 @@
 /* ===========================
-   Global Styles & Reset
+    Estilos globales y reset
 =========================== */
 * {
     margin: 0;
@@ -42,7 +42,7 @@ body {
 }
 
 /* ===========================
-   Loading Screen
+    Pantalla de carga
 =========================== */
 .loading {
     position: fixed;
@@ -74,7 +74,7 @@ body {
 }
 
 /* ===========================
-   Header
+    Encabezado (Header)
 =========================== */
 header {
     background: var(--primary);
@@ -132,7 +132,7 @@ header h1 {
 }
 
 /* ===========================
-   Screen Layout
+    Diseño de pantallas
 =========================== */
 .screen {
     min-height: 100vh;
@@ -150,7 +150,7 @@ header h1 {
 }
 
 /* ===========================
-   Cards
+    Tarjetas (Cards)
 =========================== */
 .welcome-card, .menu-card, .form-card, .history-card {
     background: var(--bg-card);
@@ -176,7 +176,7 @@ header h1 {
 }
 
 /* ===========================
-   Auth Tabs
+    Pestañas de autenticación
 =========================== */
 .auth-tabs {
     display: flex;
@@ -206,15 +206,12 @@ header h1 {
 }
 
 /* ===========================
-   Forms
+    Formularios
 =========================== */
-         color: var(--text-primary);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
+/* Corregido: se eliminaron propiedades sueltas fuera de un selector */
 
-input[type="text"], input[type="password"] {
+
+input[type="text"], input[type="password"], textarea {
     padding: 12px 16px;
     border: 2px solid var(--gray);
     border-radius: var(--border-radius);
@@ -224,19 +221,22 @@ input[type="text"], input[type="password"] {
     transition: var(--transition);
     box-shadow: none;
     outline: none;
+    resize: vertical;
+    min-height: 44px;
+    font-family: inherit;
 }
 
-input[type="text"]:focus, input[type="password"]:focus {
+input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
     outline: none;
     border-color: var(--secondary);
     box-shadow: 0 0 0 2px var(--secondary);
 }
 
 /* ===========================
-   Buttons
+    Botones
 =========================== */
 
-/* Back Button Styles */
+/* Estilos del botón de volver */
 .btn-back {
     background: var(--secondary);
     color: white;
@@ -333,7 +333,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Menu Options
+    Opciones de menú
 =========================== */
 .menu-options {
     display: flex;
@@ -342,7 +342,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Party Code
+    Código de la fiesta
 =========================== */
 .party-code {
     margin-top: 2rem;
@@ -380,7 +380,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Party Screen
+    Pantalla de la fiesta
 =========================== */
 .party-header {
     background: var(--bg-card);
@@ -459,7 +459,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Drink Selection
+    Selección de bebida
 =========================== */
 .drink-section {
     background: var(--white);
@@ -516,7 +516,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Quick Stats
+    Estadísticas rápidas
 =========================== */
 .quick-stats {
     display: grid;
@@ -550,7 +550,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Rankings
+    Rankings
 =========================== */
 .rankings-section {
     background: var(--bg-card);
@@ -630,7 +630,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Toast Notifications
+    Notificaciones (Toast)
 =========================== */
 .toast {
     position: fixed;
@@ -668,7 +668,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Modal
+    Modal
 =========================== */
 .modal {
     position: fixed;
@@ -708,7 +708,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 /* ===========================
-   Footer
+    Pie de página (Footer)
 =========================== */
 footer {
     position: fixed;
@@ -724,7 +724,7 @@ footer {
 }
 
 /* ===========================
-   Responsive Design
+    Diseño responsivo
 =========================== */
 @media (max-width: 768px) {
     .container {
@@ -826,7 +826,7 @@ footer {
 }
 
 /* ===========================
-   Animations
+    Animaciones
 =========================== */
 @keyframes fadeIn {
     from {
@@ -844,7 +844,7 @@ footer {
 }
 
 /* ===========================
-   Utility Classes
+    Clases utilitarias
 =========================== */
 .text-center {
     text-align: center;
@@ -878,7 +878,7 @@ footer {
     }
 }
 
-/* My Parties Section */
+/* Sección Mis Fiestas */
 .my-parties-container {
     max-width: 900px;
     margin: 0 auto;
@@ -1049,7 +1049,7 @@ footer {
     line-height: 1.6;
 }
 
-/* Rejoin Party Banner */
+/* Banner para volver a la fiesta */
 .rejoin-party-banner {
     background: linear-gradient(135deg, var(--success), var(--primary));
     border-radius: 12px;

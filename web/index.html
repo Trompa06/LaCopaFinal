@@ -9,7 +9,7 @@
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Encabezado -->
     <header>
         <div class="header-content">
             <img src="img/LogoSinFondo.png" alt="La Copa Final" class="logo">
@@ -21,13 +21,13 @@
         </div>
     </header>
 
-    <!-- Loading Screen -->
+    <!-- Pantalla de carga -->
     <div id="loading" class="loading">
         <div class="spinner"></div>
         <p>Cargando...</p>
     </div>
 
-    <!-- Login Screen -->
+    <!-- Pantalla de inicio de sesión -->
     <div id="loginScreen" class="screen">
         <div class="container">
             <div class="welcome-card">
@@ -39,14 +39,14 @@
                     <button class="tab-btn" onclick="showRegister()">Registrarse</button>
                 </div>
 
-                <!-- Login Form -->
+                <!-- Formulario de inicio de sesión -->
                 <div id="loginForm" class="auth-form">
                     <input type="text" id="loginName" placeholder="Nombre de usuario" required>
                     <input type="password" id="loginPassword" placeholder="Contraseña" required>
                     <button onclick="login()" class="btn-primary">Iniciar Sesión</button>
                 </div>
 
-                <!-- Register Form -->
+                <!-- Formulario de registro -->
                 <div id="registerForm" class="auth-form" style="display: none;">
                     <input type="text" id="registerName" placeholder="Nombre de usuario" required>
                     <input type="password" id="registerPassword" placeholder="Contraseña" required>
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <!-- Main Menu Screen -->
+    <!-- Pantalla de menú principal -->
     <div id="mainMenuScreen" class="screen" style="display: none;">
         <div class="container">
             <div class="menu-card">
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <!-- Create Party Screen -->
+    <!-- Pantalla de crear fiesta -->
     <div id="createPartyScreen" class="screen" style="display: none;">
         <div class="container">
             <div class="form-card">
@@ -102,7 +102,7 @@
         </div>
     </div>
 
-    <!-- Join Party Screen -->
+    <!-- Pantalla de unirse a fiesta -->
     <div id="joinPartyScreen" class="screen" style="display: none;">
         <div class="container">
             <div class="form-card">
@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <!-- Party Screen -->
+    <!-- Pantalla de la fiesta -->
     <div id="partyScreen" class="screen" style="display: none;">
         <div class="container">
             <div class="party-header">
@@ -140,7 +140,7 @@
                 </div>
             </div>
 
-            <!-- Drink Selection -->
+            <!-- Selección de bebida -->
             <div class="drink-section">
                 <h3>Registrar Bebida 🍻</h3>
                 <div class="drink-grid" id="drinkGrid">
@@ -148,7 +148,7 @@
                 </div>
             </div>
 
-            <!-- Quick Stats -->
+            <!-- Estadísticas rápidas -->
             <div class="quick-stats">
                 <div class="stat-card">
                     <span class="stat-value" id="myTotal">0</span>
@@ -164,7 +164,7 @@
                 </div>
             </div>
 
-            <!-- Rankings Tabs -->
+            <!-- Pestañas de rankings -->
             <div class="rankings-section">
                 <div class="tabs">
                     <button class="tab-btn active" onclick="showRankingTab('general')">
@@ -178,7 +178,7 @@
                     </button>
                 </div>
 
-                <!-- General Ranking -->
+                <!-- Ranking general -->
                 <div id="generalRanking" class="ranking-content">
                     <div class="chart-container">
                         <canvas id="generalChart"></canvas>
@@ -188,7 +188,7 @@
                     </div>
                 </div>
 
-                <!-- Drinks Ranking -->
+                <!-- Ranking por bebida -->
                 <div id="drinksRanking" class="ranking-content" style="display: none;">
                     <div class="chart-container">
                         <canvas id="drinksChart"></canvas>
@@ -198,7 +198,7 @@
                     </div>
                 </div>
 
-                <!-- 60min Ranking -->
+                <!-- Ranking 60 minutos -->
                 <div id="min60Ranking" class="ranking-content" style="display: none;">
                     <div class="chart-container">
                         <canvas id="min60Chart"></canvas>
@@ -211,7 +211,7 @@
         </div>
     </div>
 
-    <!-- My Parties Screen -->
+    <!-- Pantalla de mis fiestas -->
     <div id="myPartiesScreen" class="screen" style="display: none;">
         <div class="container">
             <div class="parties-card">
@@ -240,7 +240,7 @@
         </div>
     </div>
 
-    <!-- History Screen -->
+    <!-- Pantalla de historial -->
     <div id="historyScreen" class="screen" style="display: none;">
         <div class="container">
             <div class="history-card">
@@ -253,7 +253,7 @@
         </div>
     </div>
 
-    <!-- Toast Notifications -->
+    <!-- Notificaciones (Toast) -->
     <div id="toast" class="toast"></div>
 
     <!-- Modal -->
@@ -264,7 +264,7 @@
         </div>
     </div>
 
-    <!-- Warning Footer -->
+    <!-- Pie de página de advertencia -->
     <footer>
         <p>⚠️ Recuerda consumir alcohol de forma responsable. Solo para mayores de edad. 🥂</p>
     </footer>
