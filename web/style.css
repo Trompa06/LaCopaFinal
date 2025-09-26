@@ -8,27 +8,35 @@
 }
 
 :root {
-    --primary: #FF6B35;
-    --secondary: #F5A623;
-    --success: #27AE60;
-    --danger: #E74C3C;
-    --warning: #F39C12;
-    --info: #3498DB;
-    --dark: #2C3E50;
-    --light: #ECF0F1;
-    --white: #FFFFFF;
-    --gray: #95A5A6;
-    --shadow: rgba(0, 0, 0, 0.1);
-    --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+    --primary: #14213D; /* Azul marino profundo */
+    --secondary: #8A508F; /* Rosa oscuro */
+    --success: #2D6A4F; /* Verde oscuro */
+    --danger: #B00020; /* Rojo oscuro */
+    --warning: #FFC300; /* Amarillo oscuro */
+    --info: #22577A; /* Azul petróleo */
+    --dark: #0A0F1A; /* Negro azulado profundo */
+    --light: #232946; /* Azul oscuro elegante */
+    --white: #F8F9FA;
+    --black: #0A0F1A;
+    --gray: #44475a; /* Gris oscuro */
+    --shadow: rgba(20, 33, 61, 0.15);
+    --gradient: linear-gradient(135deg, #14213D 0%, #8A508F 100%);
     --border-radius: 12px;
     --transition: all 0.3s ease;
+    --accent: #8A508F;
+    --text-primary: #FFFFFF;
+    --text-secondary: #E0E0FF;
+    --text-muted: #C7C7D9;
+    --bg-card: #232946;
+    --bg-secondary: #181B2A;
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
-    color: var(--dark);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--text-primary);
+    background: var(--gradient);
+    background: var(--gradient);
     min-height: 100vh;
     padding-bottom: 60px;
 }
@@ -69,7 +77,7 @@ body {
    Header
 =========================== */
 header {
-    background: var(--white);
+    background: var(--primary);
     padding: 1rem 0;
     box-shadow: 0 2px 10px var(--shadow);
     position: fixed;
@@ -94,9 +102,11 @@ header {
 }
 
 header h1 {
-    color: var(--primary);
+    color: var(--secondary);
     font-size: 1.8rem;
     margin: 0;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 4px var(--shadow);
 }
 
 .user-info {
@@ -143,23 +153,24 @@ header h1 {
    Cards
 =========================== */
 .welcome-card, .menu-card, .form-card, .history-card {
-    background: var(--white);
+    background: var(--bg-card);
     border-radius: var(--border-radius);
     padding: 2rem;
-    box-shadow: 0 10px 30px var(--shadow);
+    box-shadow: 0 10px 30px rgba(20,33,61,0.18);
+    border: 1px solid var(--gray);
     text-align: center;
     max-width: 500px;
     margin: 0 auto;
 }
 
 .welcome-card h2, .menu-card h2, .form-card h2, .history-card h2 {
-    color: var(--primary);
+    color: #fff;
     margin-bottom: 1rem;
     font-size: 2rem;
 }
 
 .welcome-card p {
-    color: var(--gray);
+    color: #e0e0ff;
     margin-bottom: 2rem;
     font-size: 1.1rem;
 }
@@ -170,13 +181,13 @@ header h1 {
 .auth-tabs {
     display: flex;
     margin-bottom: 1.5rem;
-    border-radius: var(--border-radius);
+         color: var(--text-secondary);
     overflow: hidden;
     background: var(--light);
 }
 
 .tab-btn {
-    flex: 1;
+         color: var(--text-muted);
     padding: 12px;
     border: none;
     background: transparent;
@@ -191,13 +202,13 @@ header h1 {
 }
 
 .tab-btn:hover:not(.active) {
-    background: rgba(255, 107, 53, 0.1);
+         color: var(--text-secondary);
 }
 
 /* ===========================
    Forms
 =========================== */
-.auth-form {
+         color: var(--text-primary);
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -205,16 +216,20 @@ header h1 {
 
 input[type="text"], input[type="password"] {
     padding: 12px 16px;
-    border: 2px solid var(--light);
+    border: 2px solid var(--gray);
     border-radius: var(--border-radius);
     font-size: 1rem;
+    background: #181B2A;
+    color: #fff;
     transition: var(--transition);
+    box-shadow: none;
+    outline: none;
 }
 
 input[type="text"]:focus, input[type="password"]:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 2px var(--secondary);
 }
 
 /* ===========================
@@ -274,8 +289,9 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .btn-primary {
-    background: var(--gradient);
+    background: var(--primary);
     color: var(--white);
+    border: 2px solid var(--secondary);
 }
 
 .btn-secondary {
@@ -313,6 +329,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 .btn-primary:hover, .btn-secondary:hover, .btn-tertiary:hover, .btn-danger:hover, .btn-success:hover, .btn-info:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px var(--shadow);
+    filter: brightness(1.1);
 }
 
 /* ===========================
@@ -366,15 +383,16 @@ input[type="text"]:focus, input[type="password"]:focus {
    Party Screen
 =========================== */
 .party-header {
-    background: var(--white);
+    background: var(--bg-card);
     padding: 1.5rem;
     border-radius: var(--border-radius);
-    box-shadow: 0 5px 15px var(--shadow);
+    box-shadow: 0 5px 15px rgba(20,33,61,0.15);
+    border: 1px solid var(--gray);
     margin-bottom: 2rem;
 }
 
 .party-header h2 {
-    color: var(--primary);
+    color: #fff;
     margin-bottom: 1rem;
     text-align: center;
 }
@@ -409,7 +427,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 .party-code-text {
     font-size: 1.8rem;
     font-weight: bold;
-    color: var(--primary);
+    color: #fff;
     background: var(--white);
     padding: 10px 20px;
     border-radius: var(--border-radius);
@@ -508,7 +526,8 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .stat-card {
-    background: var(--white);
+    background: var(--bg-card);
+    border: 1px solid var(--gray);
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px var(--shadow);
@@ -534,7 +553,8 @@ input[type="text"]:focus, input[type="password"]:focus {
    Rankings
 =========================== */
 .rankings-section {
-    background: var(--white);
+    background: var(--bg-card);
+    border: 1px solid var(--gray);
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px var(--shadow);
@@ -575,14 +595,14 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .ranking-item.current-user {
-    background: rgba(255, 107, 53, 0.2);
-    border: 2px solid var(--primary);
+    background: rgba(233, 30, 99, 0.08);
+    border: 2px solid var(--secondary);
 }
 
 .ranking-position {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary);
+    color: #e0e0ff;
     min-width: 40px;
 }
 
@@ -606,7 +626,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 
 .ranking-value {
     font-weight: bold;
-    color: var(--primary);
+    color: #fff;
 }
 
 /* ===========================
@@ -616,7 +636,7 @@ input[type="text"]:focus, input[type="password"]:focus {
     position: fixed;
     top: 100px;
     right: 20px;
-    background: var(--dark);
+    background: var(--primary);
     color: var(--white);
     padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
@@ -664,12 +684,14 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .modal-content {
-    background: var(--white);
+    background: var(--bg-card);
     padding: 2rem;
     border-radius: var(--border-radius);
     max-width: 500px;
     width: 90%;
     position: relative;
+    box-shadow: 0 5px 15px rgba(20,33,61,0.15);
+    border: 1px solid var(--gray);
 }
 
 .close {
@@ -693,7 +715,7 @@ footer {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(44, 62, 80, 0.9);
+    background: rgba(44, 62, 80, 0.95);
     color: var(--white);
     text-align: center;
     padding: 10px;
@@ -885,7 +907,7 @@ footer {
 
 .party-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--gray);
     border-radius: 12px;
     padding: 20px;
     transition: all 0.3s ease;
