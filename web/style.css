@@ -252,31 +252,38 @@ input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
     Botones
 =========================== */
 
-/* Estilos del botón de volver */
+
+/* Botón de volver al menú más visible */
 .btn-back {
-    background: var(--secondary);
-    color: white;
+    background: linear-gradient(90deg, var(--secondary) 60%, var(--primary) 100%);
+    color: #fff;
     border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    margin-bottom: 15px;
+    padding: 18px 40px;
+    border-radius: 32px;
+    font-size: 1.3rem;
+    margin: 0 auto 30px auto;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 14px;
     cursor: pointer;
     transition: all 0.3s ease;
-    max-width: 200px;
+    box-shadow: 0 8px 32px 0 rgba(20,33,61,0.25);
+    font-weight: bold;
+    justify-content: center;
+    max-width: 400px;
+    text-align: center;
+    letter-spacing: 1px;
 }
 
 .btn-back:hover {
-    background: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow);
+    background: linear-gradient(90deg, var(--accent) 60%, var(--primary) 100%);
+    transform: scale(1.04) translateY(-2px);
+    box-shadow: 0 12px 32px 0 var(--shadow);
+    filter: brightness(1.08);
 }
 
 .btn-back i {
-    font-size: 1rem;
+    font-size: 1.3rem;
 }
 
 .screen-header {
@@ -452,11 +459,44 @@ input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
 }
 
 /* Textos más claros en la partyScreen */
+
+/* Mejora de contraste y visibilidad en la pantalla de la fiesta */
 #partyScreen, #partyScreen .party-header, #partyScreen .party-info, #partyScreen .party-code-display, #partyScreen .code-label {
-    color: #f3f6fa !important;
+    color: #fff !important;
+    text-shadow: 0 1px 6px rgba(20,33,61,0.25);
 }
 #partyScreen .code-label {
-    color: #bfc8e6 !important;
+    color: #e0e0ff !important;
+    text-shadow: 0 1px 6px rgba(20,33,61,0.18);
+}
+#partyScreen .party-header h2,
+#partyScreen .party-header .party-status,
+#partyScreen .party-header .party-creator,
+#partyScreen .party-header .party-participants,
+#partyScreen .party-header .party-date {
+    color: #fff !important;
+    text-shadow: 0 1px 6px rgba(20,33,61,0.25);
+}
+#partyScreen .party-code-text {
+    color: #232946;
+    background: #fff;
+    border: 2px solid var(--primary);
+    text-shadow: none;
+}
+#partyScreen .stat-label {
+    color: #e0e0ff;
+}
+#partyScreen .stat-value {
+    color: #FFD700;
+    text-shadow: 0 1px 6px rgba(20,33,61,0.18);
+}
+#partyScreen .drink-section h3 {
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(20,33,61,0.18);
+}
+#partyScreen .ranking-list, #partyScreen .ranking-item, #partyScreen .ranking-name, #partyScreen .ranking-value {
+    color: #fff !important;
+    text-shadow: 0 1px 6px rgba(20,33,61,0.18);
 }
 
 .btn-share {
@@ -486,11 +526,13 @@ input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
     Selección de bebida
 =========================== */
 .drink-section {
-    background: var(--white);
+    background: #232946;
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px var(--shadow);
     margin-bottom: 2rem;
+    border: 2px solid var(--primary);
+    /* Contraste y visibilidad mejorados */
 }
 
 .drink-section h3 {
