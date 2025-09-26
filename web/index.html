@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 La Copa Final</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <img src="img/LogoSinFondo.png" alt="La Copa Final" class="logo">
+            <h1>🏆 La Copa Final</h1>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userName"></span>
+                <button onclick="logout()" class="btn-logout">Salir</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Loading Screen -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen">
+        <div class="container">
+            <div class="welcome-card">
+                <h2>¡Bienvenido a La Copa Final! 🍻</h2>
+                <p>Compite con tus amigos y descubre quién es el campeón de la noche</p>
+                
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="showLogin()">Iniciar Sesión</button>
+                    <button class="tab-btn" onclick="showRegister()">Registrarse</button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form">
+                    <input type="text" id="loginName" placeholder="Nombre de usuario" required>
+                    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                    <button onclick="login()" class="btn-primary">Iniciar Sesión</button>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <input type="text" id="registerName" placeholder="Nombre de usuario" required>
+                    <input type="password" id="registerPassword" placeholder="Contraseña" required>
+                    <input type="password" id="confirmPassword" placeholder="Confirmar contraseña" required>
+                    <button onclick="register()" class="btn-primary">Registrarse</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="mainMenuScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="menu-card">
+                <h2>¿Qué quieres hacer?</h2>
+                <div class="menu-options">
+                    <button onclick="showCreateParty()" class="btn-primary btn-large">
+                        🎉 Crear Nueva Fiesta
+                    </button>
+                    <button onclick="showJoinParty()" class="btn-secondary btn-large">
+                        👥 Unirse a Fiesta
+                    </button>
+                    <button onclick="showMyParties()" class="btn-info btn-large">
+                        🎊 Mis Fiestas
+                    </button>
+                    <button onclick="showHistory()" class="btn-tertiary btn-large">
+                        📊 Ver Historial
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Party Screen -->
+    <div id="createPartyScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="form-card">
+                <h2>Crear Nueva Fiesta 🎉</h2>
+                <input type="text" id="partyName" placeholder="Nombre de la fiesta" required>
+                <button onclick="createParty()" class="btn-primary">Crear Fiesta</button>
+                <button onclick="showMainMenu()" class="btn-secondary">Cancelar</button>
+                
+                <div id="partyCode" class="party-code" style="display: none;">
+                    <h3>¡Fiesta creada! 🎊</h3>
+                    <p>Comparte este código con tus amigos:</p>
+                    <div class="code-display">
+                        <span id="codeValue"></span>
+                        <button onclick="copyCode()" class="btn-copy">📋</button>
+                    </div>
+                    <button onclick="startParty()" class="btn-primary">Comenzar Fiesta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Party Screen -->
+    <div id="joinPartyScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="form-card">
+                <h2>Unirse a Fiesta 👥</h2>
+                <input type="text" id="joinCode" placeholder="Código de la fiesta" required>
+                <button onclick="joinParty()" class="btn-primary">Unirse</button>
+                <button onclick="showMainMenu()" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Party Screen -->
+    <div id="partyScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="party-header">
+                <button class="btn btn-back" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i> Volver al Menú
+                </button>
+                <h2 id="partyTitle">Mi Fiesta</h2>
+                <div class="party-info">
+                    <div class="party-code-display">
+                        <span class="code-label">Código para invitar amigos:</span>
+                        <div class="code-share">
+                            <span id="partyCodeDisplay" class="party-code-text"></span>
+                            <button onclick="copyPartyCode()" class="btn-copy" title="Copiar código">📋</button>
+                            <button onclick="sharePartyCode()" class="btn-share" title="Compartir">📤</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="party-controls">
+                    <button id="endPartyBtn" onclick="endParty()" class="btn-danger" style="display: none;">
+                        Finalizar Fiesta
+                    </button>
+                    <button onclick="leaveParty()" class="btn-secondary">Salir</button>
+                </div>
+            </div>
+
+            <!-- Drink Selection -->
+            <div class="drink-section">
+                <h3>Registrar Bebida 🍻</h3>
+                <div class="drink-grid" id="drinkGrid">
+                    <!-- Drink buttons will be populated here -->
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="myTotal">0</span>
+                    <span class="stat-label">Mis Unidades</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="myPosition">-</span>
+                    <span class="stat-label">Mi Posición</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="totalParticipants">0</span>
+                    <span class="stat-label">Participantes</span>
+                </div>
+            </div>
+
+            <!-- Rankings Tabs -->
+            <div class="rankings-section">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="showRankingTab('general')">
+                        🏆 General
+                    </button>
+                    <button class="tab-btn" onclick="showRankingTab('drinks')">
+                        🍺 Por Bebida
+                    </button>
+                    <button class="tab-btn" onclick="showRankingTab('60min')">
+                        ⏱️ 60 Min
+                    </button>
+                </div>
+
+                <!-- General Ranking -->
+                <div id="generalRanking" class="ranking-content">
+                    <div class="chart-container">
+                        <canvas id="generalChart"></canvas>
+                    </div>
+                    <div class="ranking-list" id="generalList">
+                        <!-- Rankings will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Drinks Ranking -->
+                <div id="drinksRanking" class="ranking-content" style="display: none;">
+                    <div class="chart-container">
+                        <canvas id="drinksChart"></canvas>
+                    </div>
+                    <div class="ranking-list" id="drinksList">
+                        <!-- Rankings will be populated here -->
+                    </div>
+                </div>
+
+                <!-- 60min Ranking -->
+                <div id="min60Ranking" class="ranking-content" style="display: none;">
+                    <div class="chart-container">
+                        <canvas id="min60Chart"></canvas>
+                    </div>
+                    <div class="ranking-list" id="min60List">
+                        <!-- Rankings will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Parties Screen -->
+    <div id="myPartiesScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="parties-card">
+                <button class="btn btn-back" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i> Volver al Menú
+                </button>
+                <h2>Mis Fiestas 🎊</h2>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" onclick="filterParties('all')">
+                        <i class="fas fa-list"></i> Todas
+                    </button>
+                    <button class="btn btn-secondary" onclick="filterParties('active')">
+                        <i class="fas fa-play"></i> Activas
+                    </button>
+                    <button class="btn btn-secondary" onclick="filterParties('finished')">
+                        <i class="fas fa-flag-checkered"></i> Finalizadas
+                    </button>
+                </div>
+                <div id="parties-grid" class="parties-grid">
+                    <div class="loading-parties">
+                        <div class="loading-spinner"></div>
+                        <p>Cargando tus fiestas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Screen -->
+    <div id="historyScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="history-card">
+                <h2>Historial de Fiestas 📊</h2>
+                <div id="historyList">
+                    <p>Funcionalidad en desarrollo...</p>
+                </div>
+                <button onclick="showMainMenu()" class="btn-secondary">Volver</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Warning Footer -->
+    <footer>
+        <p>⚠️ Recuerda consumir alcohol de forma responsable. Solo para mayores de edad. 🥂</p>
+    </footer>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
