@@ -189,7 +189,7 @@ async function endPartyFromHistory(partyId) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
-                user_id: currentUser.id_usuario 
+                id_usuario: currentUser.id 
             })
         });
 

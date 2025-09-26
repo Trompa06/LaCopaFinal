@@ -45,43 +45,6 @@ async function initDB() {
     }
 }
 
-// Endpoint to end a party
-app.post('/api/party/:id_fiesta/end', async (req, res) => {
-    try {
-        const partyId = req.params.id_fiesta;
-        const { user_id } = req.body;
-        
-        // Verify user is the creator
-        const [partyInfo] = await db.execute(
-            'SELECT id_creador FROM fiestas WHERE id_fiesta = ?',
-            [partyId]
-        );
-        
-        if (partyInfo.length === 0) {
-            return res.status(404).json({ success: false, message: 'Fiesta no encontrada' });
-        }
-        
-        if (partyInfo[0].id_creador !== user_id) {
-            return res.status(403).json({ success: false, message: 'Solo el creador puede finalizar la fiesta' });
-        }
-        
-        // Update party status to finished
-        await db.execute(
-            'UPDATE fiestas SET finalizada = TRUE WHERE id_fiesta = ?',
-            [partyId]
-        );
-        
-        // Notify all participants via socket
-        io.to(`party_${partyId}`).emit('partyEnded', { 
-            message: 'La fiesta ha sido finalizada por el creador' 
-        });
-        
-        res.json({ success: true, message: 'Fiesta finalizada correctamente' });
-    } catch (error) {
-        console.error('Error ending party:', error);
-        res.status(500).json({ success: false, message: 'Error del servidor' });
-    }
-});
 
 // Endpoint to get party results
 app.get('/api/party/:id_fiesta/results', async (req, res) => {
