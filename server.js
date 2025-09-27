@@ -378,6 +378,29 @@ app.get('/api/user/:id_usuario/parties', async (req, res) => {
             ORDER BY f.fecha_inicio DESC
         `, [id_usuario, id_usuario]);
 
+        // Para cada fiesta finalizada, obtener el ganador
+        for (const party of parties) {
+            if (party.finalizada) {
+                const [winnerRows] = await db.execute(`
+                    SELECT u.nombre, COALESCE(SUM(c.cantidad * t.unidad_alcohol), 0) as puntuacion
+                    FROM participaciones p
+                    JOIN usuarios u ON p.id_usuario = u.id_usuario
+                    LEFT JOIN consumos c ON u.id_usuario = c.id_usuario AND c.id_fiesta = ?
+                    LEFT JOIN tipos_bebida t ON c.id_tipo = t.id_tipo
+                    WHERE p.id_fiesta = ?
+                    GROUP BY u.id_usuario, u.nombre
+                    ORDER BY puntuacion DESC
+                    LIMIT 1
+                `, [party.id_fiesta, party.id_fiesta]);
+                if (winnerRows.length > 0 && winnerRows[0].puntuacion > 0) {
+                    party.ganador = winnerRows[0].nombre;
+                    party.puntuacion_ganador = winnerRows[0].puntuacion;
+                } else {
+                    party.ganador = null;
+                    party.puntuacion_ganador = null;
+                }
+            }
+        }
         res.json({ success: true, parties });
     } catch (error) {
         console.error('Error fetching user parties:', error);
@@ -463,6 +486,7 @@ app.post('/api/party/:id_fiesta/end', async (req, res) => {
 
         // Save to history
         await saveToHistory(id_fiesta);
+
 
         // Notify all users
         io.to(`party_${id_fiesta}`).emit('partyEnded', {
