@@ -1,16 +1,14 @@
 -- ===========================
+-- Ranking Global
+-- ===========================
+-- A partir de ahora, el ranking se consultará desde esta tabla
+INSERT INTO ranking_global (id_usuario, total_unidades) VALUES
+(1, 2.0);
+-- ===========================
 -- La Copa Final - Sample Data
 -- ===========================
 
 USE LaCopaFinal;
-
--- Clear existing data (optional)
--- DELETE FROM rankings_60min;
--- DELETE FROM historial_fiestas;
--- DELETE FROM consumos;
--- DELETE FROM participaciones;
--- DELETE FROM fiestas;
--- DELETE FROM usuarios;
 
 -- ===========================
 -- Sample Users
@@ -29,23 +27,23 @@ INSERT INTO fiestas (nombre, codigo_unico, id_creador, fecha_inicio, fecha_fin, 
 -- Sample Participations
 -- ===========================
 INSERT INTO participaciones (id_usuario, id_fiesta, fecha_union) VALUES
-(1, 1, '2024-12-31 20:00:00');  -- Carlos (creator)
+(1, 1, '2024-12-31 20:00:00');
 
 -- ===========================
 -- Sample Consumptions (Party 1)
 -- ===========================
 INSERT INTO consumos (id_usuario, id_fiesta, id_tipo, cantidad, fecha_consumo) VALUES
-(1, 1, 1, 2, '2024-12-31 20:30:00');  -- 2 Cervezas
+(1, 1, 1, 2, '2024-12-31 20:30:00');
 
 -- ===========================
 -- Sample Historical Data
 -- ===========================
 INSERT INTO historial_fiestas (id_fiesta, id_usuario, total_unidades) VALUES
-(1, 1, 2.0);  -- Carlos: 2 cervezas
+(1, 1, 2.0);
 
 -- ===========================
 -- Sample 60-minute Rankings
 -- ===========================
 INSERT INTO rankings_60min (id_usuario, id_fiesta, inicio_periodo, fin_periodo, total_unidades) VALUES
-(1, 1, '2024-12-31 20:30:00', '2024-12-31 21:30:00', 2.0);  -- Carlos best hour
+(1, 1, '2024-12-31 20:30:00', '2024-12-31 21:30:00', 2.0);
 

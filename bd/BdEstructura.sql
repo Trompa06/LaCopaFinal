@@ -1,4 +1,15 @@
 -- ===========================
+-- Tabla: ranking_global
+-- ===========================
+-- Ranking acumulado por usuario (todas las fiestas)
+CREATE TABLE ranking_global (
+    id_ranking_global INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    total_unidades DECIMAL(5,2) NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+-- ===========================
 -- Base de datos: LaCopaFinal
 -- ===========================
 
