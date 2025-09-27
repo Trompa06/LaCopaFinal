@@ -1,4 +1,23 @@
-// ...existing code...
+const express = require('express');
+const mysql = require('mysql2/promise');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const http = require('http');
+const socketIo = require('socket.io');
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Middleware
+app.use(cors());
+
 // Endpoint para ranking global de todas las fiestas (historial global)
 app.get('/api/global/ranking', async (req, res) => {
     try {
@@ -20,25 +39,6 @@ app.get('/api/global/ranking', async (req, res) => {
         res.status(500).json({ success: false, message: 'Error del servidor' });
     }
 });
-const express = require('express');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const http = require('http');
-const socketIo = require('socket.io');
-const path = require('path');
-
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-});
-
-// Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.static('web'));
 

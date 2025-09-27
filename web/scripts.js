@@ -618,6 +618,56 @@ function showHistory() {
     document.getElementById('historyScreen').style.display = 'flex';
 }
 
+function showRanking() {
+    hideAllScreens();
+    document.getElementById('rankingScreen').style.display = 'block';
+    loadRanking();
+}
+
+async function loadRanking() {
+    // Simulación de datos, reemplaza con fetch a tu API real
+    const ranking = [
+        { nombre: 'Ana', puntuacion: 120 },
+        { nombre: 'Luis', puntuacion: 110 },
+        { nombre: 'Marta', puntuacion: 95 },
+        { nombre: 'Carlos', puntuacion: 80 },
+        { nombre: 'Sofía', puntuacion: 75 },
+        { nombre: 'Pedro', puntuacion: 60 }
+    ];
+    renderPodium(ranking);
+    renderRankingList(ranking);
+}
+
+function renderPodium(ranking) {
+    const podium = document.getElementById('podium');
+    podium.innerHTML = '';
+    const podiumData = ranking.slice(0, 3);
+    const podiumClasses = ['gold', 'silver', 'bronze'];
+    podiumData.forEach((user, i) => {
+        podium.innerHTML += `
+            <div class="podium-place ${podiumClasses[i]}">
+                <div class="podium-rank">${i + 1}</div>
+                <div class="podium-name">${user.nombre}</div>
+                <div class="podium-score">${user.puntuacion} pts</div>
+            </div>
+        `;
+    });
+}
+
+function renderRankingList(ranking) {
+    const rankingList = document.getElementById('rankingList');
+    rankingList.innerHTML = '';
+    ranking.slice(3).forEach((user, i) => {
+        rankingList.innerHTML += `
+            <div class="ranking-row">
+                <div class="ranking-position">${i + 4}</div>
+                <div class="ranking-name">${user.nombre}</div>
+                <div class="ranking-score">${user.puntuacion} pts</div>
+            </div>
+        `;
+    });
+}
+
 // ===========================
 // Funciones de autenticación
 // ===========================

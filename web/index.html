@@ -73,8 +73,9 @@
                     <button onclick="showMyParties()" class="btn-info btn-large">
                         🎊 Mis Fiestas
                     </button>
-                    <button onclick="showHistory()" class="btn-tertiary btn-large">
-                        📊 Ver Historial
+                    <!-- Botón de historial eliminado -->
+                    <button onclick="showRanking()" class="btn-tertiary btn-large">
+                        🏆 Ver Ranking
                     </button>
                 </div>
             </div>
@@ -245,16 +246,19 @@
         </div>
     </div>
 
-    <!-- Pantalla de historial -->
-    <div id="historyScreen" class="screen" style="display: none;">
+    <!-- Pantalla de historial eliminada -->
+
+    <!-- Pantalla de ranking global -->
+    <div id="rankingScreen" class="screen" style="display: none;">
         <div class="container">
-            <div class="history-card">
-                <h2>Historial de Fiestas 📊</h2>
-                <div class="filter-buttons" style="margin-bottom: 20px;">
-                    <button id="btnPersonalHistory" class="btn btn-primary" onclick="toggleHistory('personal')">Personal</button>
-                    <button id="btnGlobalHistory" class="btn btn-secondary" onclick="toggleHistory('global')">Global</button>
+            <div class="ranking-card">
+                <h2>Ranking de Ganadores 🏆</h2>
+                <div id="podium" class="podium">
+                    <!-- Aquí se mostrarán los 3 primeros con estilo especial -->
                 </div>
-                <div id="historyList"></div>
+                <div id="rankingList" class="ranking-list">
+                    <!-- Aquí se mostrarán el resto de participantes -->
+                </div>
                 <button onclick="showMainMenu()" class="btn-secondary">Volver</button>
             </div>
         </div>
