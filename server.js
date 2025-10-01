@@ -192,7 +192,7 @@ app.post('/api/party/create', async (req, res) => {
 
         // Add creator to participants
         await db.execute(
-            'INSERT INTO participaciones (id_usuario, id_fiesta) VALUES (?, ?)',
+            'INSERT INTO participantes (id_usuario, id_fiesta) VALUES (?, ?)',
             [id_creador, result.insertId]
         );
 
@@ -227,7 +227,7 @@ app.post('/api/party/join', async (req, res) => {
 
         // Check if user already joined
         const [existingParticipation] = await db.execute(
-            'SELECT * FROM participaciones WHERE id_usuario = ? AND id_fiesta = ?',
+            'SELECT * FROM participantes WHERE id_usuario = ? AND id_fiesta = ?',
             [id_usuario, party.id_fiesta]
         );
 
@@ -241,7 +241,7 @@ app.post('/api/party/join', async (req, res) => {
 
         // Add user to party
         await db.execute(
-            'INSERT INTO participaciones (id_usuario, id_fiesta) VALUES (?, ?)',
+            'INSERT INTO participantes (id_usuario, id_fiesta) VALUES (?, ?)',
             [id_usuario, party.id_fiesta]
         );
 
@@ -326,7 +326,7 @@ app.get('/api/party/:id_fiesta/participants', async (req, res) => {
         
         const [participants] = await db.execute(`
             SELECT u.id_usuario, u.nombre, p.fecha_union
-            FROM participaciones p
+            FROM participantes p
             JOIN usuarios u ON p.id_usuario = u.id_usuario
             WHERE p.id_fiesta = ?
             ORDER BY p.fecha_union ASC
@@ -343,10 +343,10 @@ app.get('/api/party/:id_fiesta/participants', async (req, res) => {
 app.get('/api/drink-types', async (req, res) => {
     try {
         const [types] = await db.execute('SELECT * FROM tipos_bebida');
-        res.json(types);
+        res.json({ success: true, types: types });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Error al obtener tipos de bebida' });
+        res.status(500).json({ success: false, error: 'Error al obtener tipos de bebida' });
     }
 });
 
@@ -367,12 +367,12 @@ app.get('/api/user/:id_usuario/parties', async (req, res) => {
                 u.nombre as nombre_creador,
                 p.fecha_union,
                 (f.id_creador = ?) as es_creador,
-                (SELECT COUNT(*) FROM participaciones WHERE id_fiesta = f.id_fiesta) as num_participantes,
+                (SELECT COUNT(*) FROM participantes WHERE id_fiesta = f.id_fiesta) as num_participantes,
                 CASE 
                     WHEN f.finalizada = 1 THEN 'finalizada'
                     ELSE 'activa'
                 END as estado
-            FROM participaciones p
+            FROM participantes p
             JOIN fiestas f ON p.id_fiesta = f.id_fiesta
             JOIN usuarios u ON f.id_creador = u.id_usuario
             WHERE p.id_usuario = ?
@@ -488,7 +488,7 @@ async function getRankings(id_fiesta) {
             u.id_usuario,
             u.nombre,
             COALESCE(SUM(c.cantidad * t.unidad_alcohol), 0) as total_unidades
-        FROM participaciones p
+        FROM participantes p
         JOIN usuarios u ON p.id_usuario = u.id_usuario
         LEFT JOIN consumos c ON u.id_usuario = c.id_usuario AND c.id_fiesta = ?
         LEFT JOIN tipos_bebida t ON c.id_tipo = t.id_tipo
@@ -503,7 +503,7 @@ async function getRankings(id_fiesta) {
             u.nombre,
             t.nombre as tipo_bebida,
             COALESCE(SUM(c.cantidad), 0) as cantidad_total
-        FROM participaciones p
+        FROM participantes p
         JOIN usuarios u ON p.id_usuario = u.id_usuario
         LEFT JOIN consumos c ON u.id_usuario = c.id_usuario AND c.id_fiesta = ?
         LEFT JOIN tipos_bebida t ON c.id_tipo = t.id_tipo
@@ -518,7 +518,7 @@ async function getRankings(id_fiesta) {
             u.id_usuario,
             u.nombre,
             MAX(r.total_unidades) as max_60min
-        FROM participaciones p
+        FROM participantes p
         JOIN usuarios u ON p.id_usuario = u.id_usuario
         LEFT JOIN rankings_60min r ON u.id_usuario = r.id_usuario AND r.id_fiesta = ?
         WHERE p.id_fiesta = ?
@@ -619,6 +619,111 @@ io.on('connection', (socket) => {
 //         console.error('Error auto-closing parties:', error);
 //     }
 // }, 60 * 60 * 1000); // Check every hour
+
+// Get user profile
+app.get('/api/user/:id_usuario/profile', async (req, res) => {
+    try {
+        const { id_usuario } = req.params;
+        
+        // Get user profile
+        const userQuery = 'SELECT id_usuario, nombre, email, biografia, fecha_nacimiento, genero, foto_perfil, ciudad FROM usuarios WHERE id_usuario = ?';
+        const [userResult] = await db.execute(userQuery, [id_usuario]);
+        
+        if (userResult.length === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        
+        const user = userResult[0];
+        
+        // Get favorite drinks
+        const favoritesQuery = `
+            SELECT bf.id_favorita, bf.id_tipo, tb.nombre 
+            FROM bebidas_favoritas bf 
+            JOIN tipos_bebida tb ON bf.id_tipo = tb.id_tipo 
+            WHERE bf.id_usuario = ?
+        `;
+        const [favorites] = await db.execute(favoritesQuery, [id_usuario]);
+        
+        // Get user statistics
+        const statsQuery = `
+            SELECT 
+                eu.total_fiestas_participadas,
+                eu.total_unidades_consumidas,
+                eu.mejor_posicion,
+                eu.bebida_mas_consumida
+            FROM estadisticas_usuario eu 
+            WHERE eu.id_usuario = ?
+        `;
+        const [stats] = await db.execute(statsQuery, [id_usuario]);
+        
+        res.json({
+            success: true,
+            user: user,
+            favorites: favorites,
+            statistics: stats[0] || {
+                total_fiestas_participadas: 0,
+                total_unidades_consumidas: 0,
+                mejor_posicion: null,
+                bebida_mas_consumida: null
+            }
+        });
+    } catch (error) {
+        console.error('Error getting user profile:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Update user profile
+app.put('/api/user/:id_usuario/profile', async (req, res) => {
+    try {
+        const { id_usuario } = req.params;
+        const { nombre, email, biografia, fecha_nacimiento, genero, ciudad } = req.body;
+        
+        const updateQuery = `
+            UPDATE usuarios 
+            SET nombre = ?, email = ?, biografia = ?, fecha_nacimiento = ?, genero = ?, ciudad = ?
+            WHERE id_usuario = ?
+        `;
+        
+        await db.execute(updateQuery, [nombre, email, biografia, fecha_nacimiento, genero, ciudad, id_usuario]);
+        
+        res.json({ success: true, message: 'Perfil actualizado correctamente' });
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Add favorite drink
+app.post('/api/user/:id_usuario/favorites', async (req, res) => {
+    try {
+        const { id_usuario } = req.params;
+        const { id_tipo } = req.body;
+        
+        const insertQuery = 'INSERT INTO bebidas_favoritas (id_usuario, id_tipo) VALUES (?, ?)';
+        await db.execute(insertQuery, [id_usuario, id_tipo]);
+        
+        res.json({ success: true, message: 'Bebida favorita añadida correctamente' });
+    } catch (error) {
+        console.error('Error adding favorite drink:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Remove favorite drink
+app.delete('/api/user/:id_usuario/favorites/:id_favorita', async (req, res) => {
+    try {
+        const { id_usuario, id_favorita } = req.params;
+        
+        const deleteQuery = 'DELETE FROM bebidas_favoritas WHERE id_favorita = ? AND id_usuario = ?';
+        await db.execute(deleteQuery, [id_favorita, id_usuario]);
+        
+        res.json({ success: true, message: 'Bebida favorita eliminada correctamente' });
+    } catch (error) {
+        console.error('Error removing favorite drink:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
 
 // Serve main page
 app.get('/', (req, res) => {

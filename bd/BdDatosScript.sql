@@ -8,7 +8,7 @@ USE LaCopaFinal;
 -- DELETE FROM rankings_60min;
 -- DELETE FROM historial_fiestas;
 -- DELETE FROM consumos;
--- DELETE FROM participaciones;
+-- DELETE FROM participantes;
 -- DELETE FROM fiestas;
 -- DELETE FROM usuarios;
 
@@ -28,7 +28,7 @@ INSERT INTO fiestas (nombre, codigo_unico, id_creador, fecha_inicio, fecha_fin, 
 -- ===========================
 -- Sample Participations
 -- ===========================
-INSERT INTO participaciones (id_usuario, id_fiesta, fecha_union) VALUES
+INSERT INTO participantes (id_usuario, id_fiesta, fecha_union) VALUES
 (1, 1, '2024-12-31 20:00:00');  -- Carlos (creator)
 
 -- ===========================
@@ -48,4 +48,10 @@ INSERT INTO historial_fiestas (id_fiesta, id_usuario, total_unidades) VALUES
 -- ===========================
 INSERT INTO rankings_60min (id_usuario, id_fiesta, inicio_periodo, fin_periodo, total_unidades) VALUES
 (1, 1, '2024-12-31 20:30:00', '2024-12-31 21:30:00', 2.0);  -- Carlos best hour
+
+-- ===========================
+-- Initialize User Statistics
+-- ===========================
+INSERT INTO estadisticas_usuario (id_usuario, total_fiestas_participadas, total_unidades_consumidas, mejor_posicion, racha_actual, mejor_racha) VALUES
+(1, 1, 2.0, 1, 1, 1);
 

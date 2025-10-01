@@ -77,6 +77,9 @@
                     <button onclick="showRanking()" class="btn-tertiary btn-large">
                         🏆 Ver Ranking
                     </button>
+                    <button onclick="showProfile()" class="btn-accent btn-large">
+                        👤 Mi Perfil
+                    </button>
                 </div>
             </div>
         </div>
@@ -260,6 +263,151 @@
                     <!-- Aquí se mostrarán el resto de participantes -->
                 </div>
                 <button onclick="showMainMenu()" class="btn-secondary">Volver</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de perfil de usuario -->
+    <div id="profileScreen" class="screen" style="display: none;">
+        <div class="container">
+            <div class="profile-header">
+                <button onclick="showMainMenu()" class="btn-back">← Volver</button>
+                <h2>Mi Perfil</h2>
+                <button onclick="toggleEditProfile()" class="btn-edit" id="editProfileBtn">✏️ Editar</button>
+            </div>
+
+            <div class="profile-content">
+                <!-- Información básica -->
+                <div class="profile-card">
+                    <div class="profile-avatar-section">
+                        <div class="profile-avatar" id="profileAvatar">
+                            <img id="profileImage" src="" alt="Foto de perfil" style="display: none;">
+                            <div id="profileInitials" class="profile-initials"></div>
+                        </div>
+                        <div class="profile-avatar-actions" id="avatarActions" style="display: none;">
+                            <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+                            <button onclick="selectProfileImage()" class="btn-small">📷 Cambiar foto</button>
+                            <button onclick="removeProfileImage()" class="btn-small btn-danger">🗑️ Eliminar</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-info">
+                        <div class="profile-field">
+                            <label>Nombre de usuario</label>
+                            <span class="profile-value" id="profileName"></span>
+                            <input type="text" class="profile-input" id="profileNameInput" style="display: none;">
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Email</label>
+                            <span class="profile-value" id="profileEmail">No especificado</span>
+                            <input type="email" class="profile-input" id="profileEmailInput" style="display: none;">
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Biografía</label>
+                            <span class="profile-value" id="profileBio">No especificada</span>
+                            <textarea class="profile-input" id="profileBioInput" style="display: none;" placeholder="Cuéntanos algo sobre ti..."></textarea>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Fecha de nacimiento</label>
+                            <span class="profile-value" id="profileBirthdate">No especificada</span>
+                            <input type="date" class="profile-input" id="profileBirthdateInput" style="display: none;">
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Género</label>
+                            <span class="profile-value" id="profileGender">No especificado</span>
+                            <select class="profile-input" id="profileGenderInput" style="display: none;">
+                                <option value="">Seleccionar...</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="femenino">Femenino</option>
+                                <option value="otro">Otro</option>
+                                <option value="prefiero_no_decir">Prefiero no decir</option>
+                            </select>
+                        </div>
+
+                        <div class="profile-field">
+                            <label>País</label>
+                            <span class="profile-value" id="profileCountry">No especificado</span>
+                            <input type="text" class="profile-input" id="profileCountryInput" style="display: none;" placeholder="España">
+                        </div>
+
+                        <div class="profile-field">
+                            <label>Ciudad</label>
+                            <span class="profile-value" id="profileCity">No especificada</span>
+                            <input type="text" class="profile-input" id="profileCityInput" style="display: none;" placeholder="Madrid">
+                        </div>
+
+                        <div class="profile-actions" id="profileActions" style="display: none;">
+                            <button onclick="saveProfile()" class="btn-primary">💾 Guardar cambios</button>
+                            <button onclick="cancelEditProfile()" class="btn-secondary">❌ Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bebidas favoritas -->
+                <div class="profile-card">
+                    <h3>🍻 Bebidas Favoritas</h3>
+                    <div class="favorite-drinks" id="favoriteDrinks">
+                        <!-- Se cargarán dinámicamente -->
+                    </div>
+                    <div class="add-favorite-section" id="addFavoriteSection" style="display: none;">
+                        <select id="drinkTypeSelect" class="profile-input">
+                            <option value="">Seleccionar bebida...</option>
+                        </select>
+                        <button onclick="addFavoriteDrink()" class="btn-small btn-primary">➕ Agregar</button>
+                    </div>
+                    <button onclick="toggleAddFavorite()" class="btn-small btn-secondary" id="toggleFavoriteBtn">➕ Agregar favorita</button>
+                </div>
+
+                <!-- Estadísticas del usuario -->
+                <div class="profile-card">
+                    <h3>📊 Mis Estadísticas</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalParties">0</div>
+                            <div class="stat-label">Fiestas participadas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalUnits">0</div>
+                            <div class="stat-label">Unidades consumidas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="bestPosition">-</div>
+                            <div class="stat-label">Mejor posición</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="currentStreak">0</div>
+                            <div class="stat-label">Racha actual</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="bestStreak">0</div>
+                            <div class="stat-label">Mejor racha</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="favoriteDrinkStat">-</div>
+                            <div class="stat-label">Bebida más consumida</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración avanzada -->
+                <div class="profile-card">
+                    <h3>⚙️ Configuración Personal</h3>
+                    <div class="profile-field">
+                        <label>Peso (kg) - Para cálculos más precisos</label>
+                        <span class="profile-value" id="profileWeight">No especificado</span>
+                        <input type="number" class="profile-input" id="profileWeightInput" min="30" max="200" step="0.1" style="display: none;" placeholder="70.5">
+                    </div>
+                    <div class="profile-field">
+                        <label>Altura (cm)</label>
+                        <span class="profile-value" id="profileHeight">No especificada</span>
+                        <input type="number" class="profile-input" id="profileHeightInput" min="140" max="220" style="display: none;" placeholder="175">
+                    </div>
+                    <p class="info-text">💡 Esta información nos ayuda a calcular mejor tu tolerancia al alcohol</p>
+                </div>
             </div>
         </div>
     </div>

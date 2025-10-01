@@ -242,7 +242,9 @@ async function viewPartyResults(partyId) {
         if (data.success) {
             // Store results and show results screen
             currentParty = data.party;
-            showResults(data.results);
+            // Store the results data for the ranking
+            currentParty.results = data.results;
+            showRanking(); // Usar showRanking en lugar de showResults
         } else {
             showError(data.message || 'Error al cargar los resultados');
         }
@@ -376,15 +378,17 @@ async function rejoinParty() {
         
         if (data.success && data.party && data.party.finalizada === 0) {
             // Party is still active, rejoin
+            console.log('Party data from server:', data.party); // Debug log
             currentParty = {
                 id: data.party.id_fiesta,
+                id_fiesta: data.party.id_fiesta,
                 nombre: data.party.nombre_fiesta,
                 codigo: data.party.codigo,
                 codigo_unico: data.party.codigo,
                 isCreator: savedState.party.isCreator || false
             };
             
-            console.log('Rejoining party with restored data:', currentParty);
+            console.log('Updated currentParty with ID:', currentParty); // Debug log
             console.log('Current user:', currentUser);
             
             initializeSocketConnection();
@@ -439,7 +443,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             await checkForActiveParty();
         }, 500);
     } else {
-        showLoginScreen();
+        // Temporary fix: create a test user for development
+        currentUser = {
+            id: 2,
+            nombre: 'TestUser'
+        };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        showMainMenu();
+        updateUserInfo();
     }
 });
 
@@ -625,22 +636,55 @@ function showRanking() {
 }
 
 async function loadRanking() {
-    // Simulación de datos, reemplaza con fetch a tu API real
-    const ranking = [
-        { nombre: 'Ana', puntuacion: 120 },
-        { nombre: 'Luis', puntuacion: 110 },
-        { nombre: 'Marta', puntuacion: 95 },
-        { nombre: 'Carlos', puntuacion: 80 },
-        { nombre: 'Sofía', puntuacion: 75 },
-        { nombre: 'Pedro', puntuacion: 60 }
-    ];
-    renderPodium(ranking);
-    renderRankingList(ranking);
+    try {
+        // Mostrar loading
+        const podium = document.getElementById('podium');
+        const rankingList = document.getElementById('rankingList');
+        podium.innerHTML = '<div class="loading-spinner"></div><p>Cargando ranking...</p>';
+        rankingList.innerHTML = '';
+
+        let response, data;
+        
+        // Si tenemos una fiesta activa o resultados específicos, usar el ranking de esa fiesta
+        if (currentParty && (currentParty.id_fiesta || currentParty.id)) {
+            response = await fetch(`/api/party/${currentParty.id_fiesta || currentParty.id}/rankings`);
+            data = await response.json();
+        } else {
+            // Caso por defecto: ranking global
+            response = await fetch('/api/global/ranking');
+            data = await response.json();
+        }
+
+        if (data.success) {
+            // Transformar los datos para usar el mismo formato que antes
+            const ranking = data.ranking ? data.ranking.map(user => ({
+                nombre: user.nombre,
+                puntuacion: user.total_unidades,
+                fiestas_participadas: user.fiestas_participadas
+            })) : [];
+            
+            renderPodium(ranking);
+            renderRankingList(ranking);
+        } else {
+            podium.innerHTML = '<p>Error al cargar el ranking</p>';
+            console.error('Error loading ranking:', data.message);
+        }
+    } catch (error) {
+        console.error('Error loading ranking:', error);
+        const podium = document.getElementById('podium');
+        podium.innerHTML = '<p>Error de conexión al cargar el ranking</p>';
+    }
 }
 
 function renderPodium(ranking) {
     const podium = document.getElementById('podium');
     podium.innerHTML = '';
+    
+    if (ranking.length === 0) {
+        podium.innerHTML = '<p>No hay datos de ranking disponibles</p>';
+        return;
+    }
+    
     const podiumData = ranking.slice(0, 3);
     const podiumClasses = ['gold', 'silver', 'bronze'];
     podiumData.forEach((user, i) => {
@@ -648,7 +692,8 @@ function renderPodium(ranking) {
             <div class="podium-place ${podiumClasses[i]}">
                 <div class="podium-rank">${i + 1}</div>
                 <div class="podium-name">${user.nombre}</div>
-                <div class="podium-score">${user.puntuacion} pts</div>
+                <div class="podium-score">${user.puntuacion} unidades</div>
+                <div class="podium-parties">${user.fiestas_participadas} fiestas</div>
             </div>
         `;
     });
@@ -657,12 +702,19 @@ function renderPodium(ranking) {
 function renderRankingList(ranking) {
     const rankingList = document.getElementById('rankingList');
     rankingList.innerHTML = '';
+    
+    if (ranking.length <= 3) {
+        rankingList.innerHTML = '<p>No hay más participantes en el ranking</p>';
+        return;
+    }
+    
     ranking.slice(3).forEach((user, i) => {
         rankingList.innerHTML += `
             <div class="ranking-row">
                 <div class="ranking-position">${i + 4}</div>
                 <div class="ranking-name">${user.nombre}</div>
-                <div class="ranking-score">${user.puntuacion} pts</div>
+                <div class="ranking-score">${user.puntuacion} unidades</div>
+                <div class="ranking-parties">${user.fiestas_participadas} fiestas</div>
             </div>
         `;
     });
@@ -803,13 +855,18 @@ async function createParty() {
     
     showLoading();
     
+    console.log('Current user at create party:', currentUser); // Debug log
+    
+    // Temporary fix: if no currentUser, use a valid user ID
+    const userId = currentUser ? currentUser.id : 2;
+    
     try {
         const response = await fetch('/api/party/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 nombre, 
-                id_creador: currentUser.id 
+                id_creador: userId 
             })
         });
         
@@ -818,6 +875,7 @@ async function createParty() {
         if (data.success) {
             currentParty = {
                 id: data.id_fiesta,
+                id_fiesta: data.id_fiesta,
                 nombre: nombre,
                 codigo: data.codigo_unico,
                 codigo_unico: data.codigo_unico, // Para compatibilidad
@@ -863,6 +921,7 @@ async function joinParty() {
         if (data.success) {
             currentParty = {
                 id: data.id_fiesta,
+                id_fiesta: data.id_fiesta,
                 nombre: data.nombre_fiesta || 'Fiesta',
                 codigo: codigo,
                 codigo_unico: codigo, // Para compatibilidad
@@ -889,11 +948,12 @@ async function startParty() {
     }
     
     // Join socket room
-    socket.emit('joinParty', currentParty.id);
+    socket.emit('joinParty', currentParty.id_fiesta || currentParty.id);
     
     // Get party info to verify creator status
     try {
-        const response = await fetch(`/api/party/${currentParty.id}/info`);
+        console.log('About to fetch party info, currentParty.id:', currentParty.id_fiesta || currentParty.id); // Debug log
+        const response = await fetch(`/api/party/${currentParty.id_fiesta || currentParty.id}/info`);
         const partyInfo = await response.json();
         
         if (response.ok) {
@@ -905,6 +965,10 @@ async function startParty() {
             // Update UI
             document.getElementById('partyTitle').textContent = currentParty.nombre;
             document.getElementById('partyCodeDisplay').textContent = currentParty.codigo;
+            document.getElementById('codeValue').textContent = currentParty.codigo;
+            
+            // Show party code section
+            document.getElementById('partyCode').style.display = 'block';
             
             if (currentParty.isCreator) {
                 document.getElementById('endPartyBtn').style.display = 'block';
@@ -917,6 +981,29 @@ async function startParty() {
     }
     
     // Populate drink buttons
+    console.log('About to load drink types and populate buttons...'); // Debug log
+    try {
+        await loadDrinkTypes(); // Asegurar que se cargan los tipos primero
+        console.log('Drink types loaded, now populating buttons...'); // Debug log
+    } catch (error) {
+        console.error('Error in loadDrinkTypes:', error);
+    }
+    
+    // Backup: try direct fetch if drinkTypes is still empty
+    if (!drinkTypes || drinkTypes.length === 0) {
+        console.log('Trying backup method to load drink types...');
+        fetch('/api/drink-types')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Backup method response:', data);
+                if (data.success && data.types) {
+                    drinkTypes = data.types;
+                    populateDrinkButtons();
+                }
+            })
+            .catch(error => console.error('Backup method error:', error));
+    }
+    
     populateDrinkButtons();
     
     // Show party screen
@@ -1015,7 +1102,7 @@ async function endParty() {
     showLoading();
     
     try {
-        const response = await fetch(`/api/party/${currentParty.id}/end`, {
+        const response = await fetch(`/api/party/${currentParty.id_fiesta || currentParty.id}/end`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id_usuario: currentUser.id })
@@ -1072,17 +1159,40 @@ function exitPartyCompletely() {
 // ===========================
 async function loadDrinkTypes() {
     try {
+        console.log('Loading drink types...'); // Debug log
         const response = await fetch('/api/drink-types');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        drinkTypes = data;
+        console.log('Drink types response:', data); // Debug log
+        
+        if (data.success && data.types) {
+            drinkTypes = data.types;
+            console.log('Drink types loaded:', drinkTypes); // Debug log
+        } else {
+            console.error('Failed to load drink types:', data);
+            drinkTypes = []; // Asegurar que sea un array vacío
+        }
     } catch (error) {
         console.error('Error loading drink types:', error);
+        drinkTypes = []; // Asegurar que sea un array vacío
     }
 }
 
 function populateDrinkButtons() {
     const grid = document.getElementById('drinkGrid');
     grid.innerHTML = '';
+    
+    console.log('Populating drink buttons, drinkTypes:', drinkTypes); // Debug log
+    
+    if (!drinkTypes || drinkTypes.length === 0) {
+        console.log('No drink types available!'); // Debug log
+        grid.innerHTML = '<p>No hay bebidas disponibles</p>';
+        return;
+    }
     
     const drinkEmojis = {
         'Cerveza': '🍺',
@@ -1131,7 +1241,7 @@ async function addDrink(drinkTypeId) {
     try {
         const requestBody = {
             id_usuario: currentUser.id,
-            id_fiesta: currentParty.id,
+            id_fiesta: currentParty.id_fiesta || currentParty.id,
             id_tipo: drinkTypeId,
             cantidad: 1
         };
@@ -1310,7 +1420,7 @@ async function loadParticipants() {
     if (!currentParty) return;
     
     try {
-        const response = await fetch(`/api/party/${currentParty.id}/participants`);
+        const response = await fetch(`/api/party/${currentParty.id_fiesta || currentParty.id}/participants`);
         const participants = await response.json();
         
         document.getElementById('totalParticipants').textContent = participants.length;
@@ -1454,5 +1564,415 @@ function showRankingTab(tabName) {
     } else if (tabName === '60min') {
         document.getElementById('min60Ranking').style.display = 'block';
         document.querySelectorAll('.rankings-section .tab-btn')[2].classList.add('active');
+    }
+}
+
+// ===========================
+// Funciones de Perfil de Usuario
+// ===========================
+let isEditingProfile = false;
+let originalProfileData = {};
+
+function showProfile() {
+    hideAllScreens();
+    document.getElementById('profileScreen').style.display = 'block';
+    loadProfile();
+}
+
+async function loadProfile() {
+    try {
+        // Temporary fix: if no currentUser, use a valid user ID
+        const userId = currentUser ? currentUser.id : 2;
+        
+        // Cargar datos del perfil
+        const response = await fetch(`/api/user/${userId}/profile`);
+        const data = await response.json();
+
+        if (data.success) {
+            displayProfile(data.user);
+            loadFavoriteDrinks();
+            loadUserStats();
+            loadDrinkTypes();
+        } else {
+            showError(data.message || 'Error al cargar el perfil');
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        showError('Error de conexión al cargar el perfil');
+    }
+}
+
+function displayProfile(profile) {
+    // Almacenar datos originales
+    originalProfileData = { ...profile };
+
+    // Mostrar información básica
+    document.getElementById('profileName').textContent = profile.nombre || currentUser.name;
+    document.getElementById('profileEmail').textContent = profile.email || 'No especificado';
+    document.getElementById('profileBio').textContent = profile.biografia || 'No especificada';
+    document.getElementById('profileBirthdate').textContent = profile.fecha_nacimiento 
+        ? new Date(profile.fecha_nacimiento).toLocaleDateString('es-ES') 
+        : 'No especificada';
+    document.getElementById('profileGender').textContent = 
+        profile.genero ? formatGender(profile.genero) : 'No especificado';
+    document.getElementById('profileCountry').textContent = profile.pais || 'No especificado';
+    document.getElementById('profileCity').textContent = profile.ciudad || 'No especificada';
+    document.getElementById('profileWeight').textContent = 
+        profile.peso ? `${profile.peso} kg` : 'No especificado';
+    document.getElementById('profileHeight').textContent = 
+        profile.altura ? `${profile.altura} cm` : 'No especificada';
+
+    // Configurar inputs
+    document.getElementById('profileNameInput').value = profile.nombre || currentUser.name;
+    document.getElementById('profileEmailInput').value = profile.email || '';
+    document.getElementById('profileBioInput').value = profile.biografia || '';
+    document.getElementById('profileBirthdateInput').value = profile.fecha_nacimiento || '';
+    document.getElementById('profileGenderInput').value = profile.genero || '';
+    document.getElementById('profileCountryInput').value = profile.pais || '';
+    document.getElementById('profileCityInput').value = profile.ciudad || '';
+    document.getElementById('profileWeightInput').value = profile.peso || '';
+    document.getElementById('profileHeightInput').value = profile.altura || '';
+
+    // Configurar avatar
+    updateProfileAvatar(profile);
+    
+    // Asegurar que estamos en modo de solo lectura
+    if (isEditingProfile) {
+        isEditingProfile = false;
+        toggleEditProfile();
+    }
+}
+
+function updateProfileAvatar(profile) {
+    const profileImage = document.getElementById('profileImage');
+    const profileInitials = document.getElementById('profileInitials');
+
+    if (profile.foto_perfil) {
+        profileImage.src = profile.foto_perfil;
+        profileImage.style.display = 'block';
+        profileInitials.style.display = 'none';
+    } else {
+        profileImage.style.display = 'none';
+        profileInitials.style.display = 'block';
+        const name = profile.nombre || currentUser.name;
+        profileInitials.textContent = name.substring(0, 2).toUpperCase();
+    }
+}
+
+function formatGender(gender) {
+    const genderMap = {
+        'masculino': 'Masculino',
+        'femenino': 'Femenino',
+        'otro': 'Otro',
+        'prefiero_no_decir': 'Prefiero no decir'
+    };
+    return genderMap[gender] || gender;
+}
+
+async function loadFavoriteDrinks() {
+    try {
+        const response = await fetch(`/api/user/${currentUser.id}/favorite-drinks`);
+        const data = await response.json();
+
+        if (data.success) {
+            displayFavoriteDrinks(data.favorites);
+        }
+    } catch (error) {
+        console.error('Error loading favorite drinks:', error);
+    }
+}
+
+function displayFavoriteDrinks(favorites) {
+    const container = document.getElementById('favoriteDrinks');
+    
+    if (favorites.length === 0) {
+        container.innerHTML = '<p class="text-muted">No tienes bebidas favoritas agregadas</p>';
+        return;
+    }
+
+    container.innerHTML = favorites.map(fav => `
+        <div class="favorite-drink-item">
+            <span class="favorite-drink-name">${fav.nombre}</span>
+            <button class="remove-favorite" onclick="removeFavoriteDrink(${fav.id_tipo})" title="Eliminar favorita">
+                ✕
+            </button>
+        </div>
+    `).join('');
+}
+
+async function loadDrinkTypes() {
+    try {
+        const response = await fetch('/api/drink-types');
+        const data = await response.json();
+
+        if (data.success) {
+            const select = document.getElementById('drinkTypeSelect');
+            select.innerHTML = '<option value="">Seleccionar bebida...</option>' +
+                data.types.map(type => 
+                    `<option value="${type.id_tipo}">${type.nombre}</option>`
+                ).join('');
+        }
+    } catch (error) {
+        console.error('Error loading drink types:', error);
+    }
+}
+
+async function loadUserStats() {
+    try {
+        const response = await fetch(`/api/user/${currentUser.id}/stats`);
+        const data = await response.json();
+
+        if (data.success) {
+            displayUserStats(data.stats);
+        }
+    } catch (error) {
+        console.error('Error loading user stats:', error);
+    }
+}
+
+function displayUserStats(stats) {
+    document.getElementById('totalParties').textContent = stats.total_fiestas_participadas || 0;
+    document.getElementById('totalUnits').textContent = (stats.total_unidades_consumidas || 0).toFixed(1);
+    document.getElementById('bestPosition').textContent = stats.mejor_posicion ? `#${stats.mejor_posicion}` : '-';
+    document.getElementById('currentStreak').textContent = stats.racha_actual || 0;
+    document.getElementById('bestStreak').textContent = stats.mejor_racha || 0;
+    document.getElementById('favoriteDrinkStat').textContent = stats.bebida_mas_consumida_nombre || '-';
+}
+
+function toggleEditProfile() {
+    const editBtn = document.getElementById('editProfileBtn');
+    
+    if (!isEditingProfile) {
+        // Activar modo edición
+        isEditingProfile = true;
+        
+        // Ocultar todos los valores y mostrar todos los inputs
+        document.querySelectorAll('.profile-value').forEach(val => {
+            val.style.display = 'none';
+        });
+        document.querySelectorAll('.profile-input').forEach(input => {
+            input.style.display = 'block';
+        });
+        
+        // Mostrar acciones y avatar actions
+        const actions = document.getElementById('profileActions');
+        const avatarActions = document.getElementById('avatarActions');
+        if (actions) actions.style.display = 'flex';
+        if (avatarActions) avatarActions.style.display = 'flex';
+        
+        editBtn.textContent = '❌ Cancelar';
+        editBtn.onclick = cancelEditProfile;
+        
+    } else {
+        // Desactivar modo edición
+        isEditingProfile = false;
+        
+        // Mostrar todos los valores y ocultar todos los inputs
+        document.querySelectorAll('.profile-value').forEach(val => {
+            val.style.display = 'block';
+        });
+        document.querySelectorAll('.profile-input').forEach(input => {
+            input.style.display = 'none';
+        });
+        
+        // Ocultar acciones y avatar actions
+        const actions = document.getElementById('profileActions');
+        const avatarActions = document.getElementById('avatarActions');
+        if (actions) actions.style.display = 'none';
+        if (avatarActions) avatarActions.style.display = 'none';
+        
+        editBtn.textContent = '✏️ Editar';
+        editBtn.onclick = toggleEditProfile;
+    }
+}
+
+function cancelEditProfile() {
+    // Restaurar los datos originales en los inputs
+    if (originalProfileData) {
+        document.getElementById('profileNameInput').value = originalProfileData.nombre || currentUser.name;
+        document.getElementById('profileEmailInput').value = originalProfileData.email || '';
+        document.getElementById('profileBioInput').value = originalProfileData.biografia || '';
+        document.getElementById('profileBirthdateInput').value = originalProfileData.fecha_nacimiento || '';
+        document.getElementById('profileGenderInput').value = originalProfileData.genero || '';
+        document.getElementById('profileCountryInput').value = originalProfileData.pais || '';
+        document.getElementById('profileCityInput').value = originalProfileData.ciudad || '';
+        document.getElementById('profileWeightInput').value = originalProfileData.peso || '';
+        document.getElementById('profileHeightInput').value = originalProfileData.altura || '';
+    }
+    
+    // Salir del modo edición
+    toggleEditProfile();
+}
+
+async function saveProfile() {
+    try {
+        const profileData = {
+            nombre: document.getElementById('profileNameInput').value,
+            email: document.getElementById('profileEmailInput').value,
+            biografia: document.getElementById('profileBioInput').value,
+            fecha_nacimiento: document.getElementById('profileBirthdateInput').value || null,
+            genero: document.getElementById('profileGenderInput').value || null,
+            pais: document.getElementById('profileCountryInput').value || null,
+            ciudad: document.getElementById('profileCityInput').value || null,
+            peso: document.getElementById('profileWeightInput').value || null,
+            altura: document.getElementById('profileHeightInput').value || null
+        };
+
+        const response = await fetch(`/api/user/${currentUser.id}/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(profileData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showSuccess('Perfil actualizado correctamente');
+            currentUser.name = profileData.nombre;
+            document.getElementById('userName').textContent = currentUser.name;
+            toggleEditProfile();
+            loadProfile();
+        } else {
+            showError(data.message || 'Error al actualizar el perfil');
+        }
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        showError('Error de conexión al guardar el perfil');
+    }
+}
+
+function selectProfileImage() {
+    document.getElementById('profileImageInput').click();
+}
+
+document.getElementById('profileImageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            showError('La imagen debe ser menor a 2MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadProfileImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+async function uploadProfileImage(base64Image) {
+    try {
+        const response = await fetch(`/api/user/${currentUser.id}/profile-image`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ image: base64Image })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('profileImage').src = base64Image;
+            document.getElementById('profileImage').style.display = 'block';
+            document.getElementById('profileInitials').style.display = 'none';
+            showSuccess('Foto de perfil actualizada');
+        } else {
+            showError(data.message || 'Error al subir la imagen');
+        }
+    } catch (error) {
+        console.error('Error uploading profile image:', error);
+        showError('Error de conexión al subir la imagen');
+    }
+}
+
+async function removeProfileImage() {
+    try {
+        const response = await fetch(`/api/user/${currentUser.id}/profile-image`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('profileImage').style.display = 'none';
+            document.getElementById('profileInitials').style.display = 'block';
+            updateProfileAvatar({ nombre: currentUser.name });
+            showSuccess('Foto de perfil eliminada');
+        } else {
+            showError(data.message || 'Error al eliminar la imagen');
+        }
+    } catch (error) {
+        console.error('Error removing profile image:', error);
+        showError('Error de conexión al eliminar la imagen');
+    }
+}
+
+function toggleAddFavorite() {
+    const section = document.getElementById('addFavoriteSection');
+    const btn = document.getElementById('toggleFavoriteBtn');
+    
+    if (section.style.display === 'none' || !section.style.display) {
+        section.style.display = 'flex';
+        btn.textContent = '❌ Cancelar';
+    } else {
+        section.style.display = 'none';
+        btn.textContent = '➕ Agregar favorita';
+        document.getElementById('drinkTypeSelect').value = '';
+    }
+}
+
+async function addFavoriteDrink() {
+    const drinkTypeId = document.getElementById('drinkTypeSelect').value;
+    
+    if (!drinkTypeId) {
+        showError('Por favor selecciona una bebida');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/user/${currentUser.id}/favorite-drinks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ drink_type_id: drinkTypeId })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showSuccess('Bebida favorita agregada');
+            loadFavoriteDrinks();
+            toggleAddFavorite();
+        } else {
+            showError(data.message || 'Error al agregar bebida favorita');
+        }
+    } catch (error) {
+        console.error('Error adding favorite drink:', error);
+        showError('Error de conexión al agregar bebida favorita');
+    }
+}
+
+async function removeFavoriteDrink(drinkTypeId) {
+    try {
+        const response = await fetch(`/api/user/${currentUser.id}/favorite-drinks/${drinkTypeId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showSuccess('Bebida favorita eliminada');
+            loadFavoriteDrinks();
+        } else {
+            showError(data.message || 'Error al eliminar bebida favorita');
+        }
+    } catch (error) {
+        console.error('Error removing favorite drink:', error);
+        showError('Error de conexión al eliminar bebida favorita');
     }
 }
