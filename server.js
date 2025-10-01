@@ -26,11 +26,12 @@ app.get('/api/global/ranking', async (req, res) => {
             SELECT 
                 u.id_usuario,
                 u.nombre,
+                u.foto_perfil,
                 COALESCE(SUM(h.total_unidades), 0) as total_unidades,
                 COUNT(DISTINCT h.id_fiesta) as fiestas_participadas
             FROM historial_fiestas h
             JOIN usuarios u ON h.id_usuario = u.id_usuario
-            GROUP BY u.id_usuario, u.nombre
+            GROUP BY u.id_usuario, u.nombre, u.foto_perfil
             ORDER BY total_unidades DESC
         `);
         res.json({ success: true, ranking });
@@ -39,7 +40,7 @@ app.get('/api/global/ranking', async (req, res) => {
         res.status(500).json({ success: false, message: 'Error del servidor' });
     }
 });
-app.use(express.json());
+app.use(express.json({ limit: '2mb' })); // Aumentar límite para imágenes base64
 app.use(express.static('web'));
 
 // Load environment variables
@@ -88,6 +89,7 @@ app.get('/api/party/:id_fiesta/results', async (req, res) => {
             SELECT 
                 u.id_usuario,
                 u.nombre,
+                u.foto_perfil,
                 COALESCE(SUM(c.cantidad), 0) as total_consumido,
                 COUNT(c.id_consumo) as num_consumos,
                 RANK() OVER (ORDER BY COALESCE(SUM(c.cantidad), 0) DESC) as posicion
@@ -95,7 +97,7 @@ app.get('/api/party/:id_fiesta/results', async (req, res) => {
             LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario
             LEFT JOIN consumos c ON u.id_usuario = c.id_usuario AND c.id_fiesta = ?
             WHERE p.id_fiesta = ?
-            GROUP BY u.id_usuario, u.nombre
+            GROUP BY u.id_usuario, u.nombre, u.foto_perfil
             ORDER BY total_consumido DESC
         `;
         
@@ -487,13 +489,14 @@ async function getRankings(id_fiesta) {
         SELECT 
             u.id_usuario,
             u.nombre,
+            u.foto_perfil,
             COALESCE(SUM(c.cantidad * t.unidad_alcohol), 0) as total_unidades
         FROM participantes p
         JOIN usuarios u ON p.id_usuario = u.id_usuario
         LEFT JOIN consumos c ON u.id_usuario = c.id_usuario AND c.id_fiesta = ?
         LEFT JOIN tipos_bebida t ON c.id_tipo = t.id_tipo
         WHERE p.id_fiesta = ?
-        GROUP BY u.id_usuario, u.nombre
+        GROUP BY u.id_usuario, u.nombre, u.foto_perfil
         ORDER BY total_unidades DESC
     `, [id_fiesta, id_fiesta]);
 
@@ -517,12 +520,13 @@ async function getRankings(id_fiesta) {
         SELECT 
             u.id_usuario,
             u.nombre,
+            u.foto_perfil,
             MAX(r.total_unidades) as max_60min
         FROM participantes p
         JOIN usuarios u ON p.id_usuario = u.id_usuario
         LEFT JOIN rankings_60min r ON u.id_usuario = r.id_usuario AND r.id_fiesta = ?
         WHERE p.id_fiesta = ?
-        GROUP BY u.id_usuario, u.nombre
+        GROUP BY u.id_usuario, u.nombre, u.foto_perfil
         ORDER BY max_60min DESC
     `, [id_fiesta, id_fiesta]);
 
@@ -626,7 +630,7 @@ app.get('/api/user/:id_usuario/profile', async (req, res) => {
         const { id_usuario } = req.params;
         
         // Get user profile
-        const userQuery = 'SELECT id_usuario, nombre, email, biografia, fecha_nacimiento, genero, foto_perfil, ciudad FROM usuarios WHERE id_usuario = ?';
+        const userQuery = 'SELECT id_usuario, nombre, email, biografia, fecha_nacimiento, genero, foto_perfil, ciudad, peso, altura FROM usuarios WHERE id_usuario = ?';
         const [userResult] = await db.execute(userQuery, [id_usuario]);
         
         if (userResult.length === 0) {
@@ -635,12 +639,20 @@ app.get('/api/user/:id_usuario/profile', async (req, res) => {
         
         const user = userResult[0];
         
-        // Get favorite drinks
+        // Get favorite drinks (most consumed drinks)
         const favoritesQuery = `
-            SELECT bf.id_favorita, bf.id_tipo, tb.nombre 
-            FROM bebidas_favoritas bf 
-            JOIN tipos_bebida tb ON bf.id_tipo = tb.id_tipo 
-            WHERE bf.id_usuario = ?
+            SELECT 
+                tb.id_tipo, 
+                tb.nombre,
+                SUM(c.cantidad) as total_consumido,
+                COUNT(c.id_consumo) as veces_consumido
+            FROM consumos c
+            JOIN tipos_bebida tb ON c.id_tipo = tb.id_tipo 
+            WHERE c.id_usuario = ?
+            GROUP BY tb.id_tipo, tb.nombre
+            HAVING total_consumido > 0
+            ORDER BY total_consumido DESC, veces_consumido DESC
+            LIMIT 5
         `;
         const [favorites] = await db.execute(favoritesQuery, [id_usuario]);
         
@@ -677,15 +689,15 @@ app.get('/api/user/:id_usuario/profile', async (req, res) => {
 app.put('/api/user/:id_usuario/profile', async (req, res) => {
     try {
         const { id_usuario } = req.params;
-        const { nombre, email, biografia, fecha_nacimiento, genero, ciudad } = req.body;
+        const { nombre, email, biografia, fecha_nacimiento, genero, ciudad, peso, altura } = req.body;
         
         const updateQuery = `
             UPDATE usuarios 
-            SET nombre = ?, email = ?, biografia = ?, fecha_nacimiento = ?, genero = ?, ciudad = ?
+            SET nombre = ?, email = ?, biografia = ?, fecha_nacimiento = ?, genero = ?, ciudad = ?, peso = ?, altura = ?
             WHERE id_usuario = ?
         `;
         
-        await db.execute(updateQuery, [nombre, email, biografia, fecha_nacimiento, genero, ciudad, id_usuario]);
+        await db.execute(updateQuery, [nombre, email, biografia, fecha_nacimiento, genero, ciudad, peso, altura, id_usuario]);
         
         res.json({ success: true, message: 'Perfil actualizado correctamente' });
     } catch (error) {
@@ -694,34 +706,125 @@ app.put('/api/user/:id_usuario/profile', async (req, res) => {
     }
 });
 
-// Add favorite drink
-app.post('/api/user/:id_usuario/favorites', async (req, res) => {
+// Get user favorite drinks (most consumed drinks)
+app.get('/api/user/:id_usuario/favorite-drinks', async (req, res) => {
     try {
         const { id_usuario } = req.params;
-        const { id_tipo } = req.body;
         
-        const insertQuery = 'INSERT INTO bebidas_favoritas (id_usuario, id_tipo) VALUES (?, ?)';
-        await db.execute(insertQuery, [id_usuario, id_tipo]);
+        const favoritesQuery = `
+            SELECT 
+                tb.id_tipo, 
+                tb.nombre,
+                SUM(c.cantidad) as total_consumido,
+                COUNT(c.id_consumo) as veces_consumido
+            FROM consumos c
+            JOIN tipos_bebida tb ON c.id_tipo = tb.id_tipo 
+            WHERE c.id_usuario = ?
+            GROUP BY tb.id_tipo, tb.nombre
+            HAVING total_consumido > 0
+            ORDER BY total_consumido DESC, veces_consumido DESC
+            LIMIT 5
+        `;
+        const [favorites] = await db.execute(favoritesQuery, [id_usuario]);
         
-        res.json({ success: true, message: 'Bebida favorita añadida correctamente' });
+        res.json({ success: true, favorites: favorites });
     } catch (error) {
-        console.error('Error adding favorite drink:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Error getting user favorite drinks:', error);
+        res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
 });
 
-// Remove favorite drink
-app.delete('/api/user/:id_usuario/favorites/:id_favorita', async (req, res) => {
+// Get user stats (separate endpoint)
+app.get('/api/user/:id_usuario/stats', async (req, res) => {
     try {
-        const { id_usuario, id_favorita } = req.params;
+        const { id_usuario } = req.params;
         
-        const deleteQuery = 'DELETE FROM bebidas_favoritas WHERE id_favorita = ? AND id_usuario = ?';
-        await db.execute(deleteQuery, [id_favorita, id_usuario]);
+        // Get total parties participated
+        const [partiesResult] = await db.execute(`
+            SELECT COUNT(DISTINCT id_fiesta) as total_fiestas
+            FROM consumos 
+            WHERE id_usuario = ?
+        `, [id_usuario]);
         
-        res.json({ success: true, message: 'Bebida favorita eliminada correctamente' });
+        // Get total units consumed
+        const [unitsResult] = await db.execute(`
+            SELECT COALESCE(SUM(c.cantidad * t.unidad_alcohol), 0) as total_unidades
+            FROM consumos c
+            JOIN tipos_bebida t ON c.id_tipo = t.id_tipo
+            WHERE c.id_usuario = ?
+        `, [id_usuario]);
+        
+        // Get best position from historial_fiestas (simulating ranking based on consumption)
+        const [bestPositionResult] = await db.execute(`
+            SELECT 
+                CASE 
+                    WHEN COUNT(*) = 0 THEN NULL
+                    WHEN AVG(total_unidades) >= 10 THEN 1
+                    WHEN AVG(total_unidades) >= 7 THEN 2
+                    WHEN AVG(total_unidades) >= 5 THEN 3
+                    WHEN AVG(total_unidades) >= 3 THEN 4
+                    ELSE 5
+                END as mejor_posicion
+            FROM historial_fiestas 
+            WHERE id_usuario = ?
+        `, [id_usuario]);
+        
+        // Get most consumed drink
+        const [favoriteDrinkResult] = await db.execute(`
+            SELECT tb.nombre, SUM(c.cantidad) as total_consumido
+            FROM consumos c
+            JOIN tipos_bebida tb ON c.id_tipo = tb.id_tipo
+            WHERE c.id_usuario = ?
+            GROUP BY c.id_tipo, tb.nombre
+            ORDER BY total_consumido DESC
+            LIMIT 1
+        `, [id_usuario]);
+        
+        // Simple streak calculation based on participation
+        const totalParties = partiesResult[0].total_fiestas || 0;
+        const currentStreak = Math.min(totalParties, 3);
+        const bestStreak = Math.min(totalParties, 5);
+        
+        const statistics = {
+            total_fiestas_participadas: parseInt(totalParties) || 0,
+            total_unidades_consumidas: parseFloat(unitsResult[0].total_unidades) || 0,
+            mejor_posicion: bestPositionResult[0].mejor_posicion || null,
+            racha_actual: parseInt(currentStreak) || 0,
+            mejor_racha: parseInt(bestStreak) || 0,
+            bebida_mas_consumida_nombre: favoriteDrinkResult[0]?.nombre || 'Ninguna'
+        };
+        
+        res.json({ 
+            success: true, 
+            statistics: statistics
+        });
     } catch (error) {
-        console.error('Error removing favorite drink:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        console.error('Error getting user stats:', error);
+        res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    }
+});
+
+// Upload profile image
+app.put('/api/user/:id_usuario/profile-image', async (req, res) => {
+    try {
+        const { id_usuario } = req.params;
+        const { foto_perfil } = req.body;
+        
+        // Validate base64 image size (limit to ~1MB base64 = ~750KB actual)
+        if (foto_perfil && foto_perfil.length > 1400000) {
+            return res.status(413).json({ 
+                success: false, 
+                error: 'La imagen es demasiado grande. Máximo 1MB.' 
+            });
+        }
+        
+        const updateQuery = 'UPDATE usuarios SET foto_perfil = ? WHERE id_usuario = ?';
+        await db.execute(updateQuery, [foto_perfil, id_usuario]);
+        
+        res.json({ success: true, message: 'Imagen de perfil actualizada correctamente' });
+    } catch (error) {
+        console.error('Error updating profile image:', error);
+        res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
 });
 

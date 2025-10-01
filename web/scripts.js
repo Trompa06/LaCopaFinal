@@ -244,7 +244,7 @@ async function viewPartyResults(partyId) {
             currentParty = data.party;
             // Store the results data for the ranking
             currentParty.results = data.results;
-            showRanking(); // Usar showRanking en lugar de showResults
+            showResults(); // Mostrar resultados finales, no ranking en tiempo real
         } else {
             showError(data.message || 'Error al cargar los resultados');
         }
@@ -659,15 +659,19 @@ async function loadRanking() {
             // Transformar los datos para usar el mismo formato que antes
             const ranking = data.ranking ? data.ranking.map(user => ({
                 nombre: user.nombre,
+                foto_perfil: user.foto_perfil,
                 puntuacion: user.total_unidades,
                 fiestas_participadas: user.fiestas_participadas
             })) : [];
+            
+            console.log('Ranking data received:', data.ranking); // Debug log
+            console.log('Transformed ranking:', ranking); // Debug log
             
             renderPodium(ranking);
             renderRankingList(ranking);
         } else {
             podium.innerHTML = '<p>Error al cargar el ranking</p>';
-            console.error('Error loading ranking:', data.message);
+            console.error('Error loading ranking:', data.message || data.error || 'Unknown error');
         }
     } catch (error) {
         console.error('Error loading ranking:', error);
@@ -690,10 +694,11 @@ function renderPodium(ranking) {
     podiumData.forEach((user, i) => {
         podium.innerHTML += `
             <div class="podium-place ${podiumClasses[i]}">
+                <div class="podium-avatar">${generateUserAvatar(user, '60px')}</div>
                 <div class="podium-rank">${i + 1}</div>
                 <div class="podium-name">${user.nombre}</div>
-                <div class="podium-score">${user.puntuacion} unidades</div>
-                <div class="podium-parties">${user.fiestas_participadas} fiestas</div>
+                <div class="podium-score">${user.puntuacion || user.total_unidades} unidades</div>
+                <div class="podium-parties">${user.fiestas_participadas || 1} fiestas</div>
             </div>
         `;
     });
@@ -712,12 +717,56 @@ function renderRankingList(ranking) {
         rankingList.innerHTML += `
             <div class="ranking-row">
                 <div class="ranking-position">${i + 4}</div>
+                <div class="ranking-avatar">${generateUserAvatar(user, '40px')}</div>
                 <div class="ranking-name">${user.nombre}</div>
-                <div class="ranking-score">${user.puntuacion} unidades</div>
-                <div class="ranking-parties">${user.fiestas_participadas} fiestas</div>
+                <div class="ranking-score">${user.puntuacion || user.total_unidades} unidades</div>
+                <div class="ranking-parties">${user.fiestas_participadas || 1} fiestas</div>
             </div>
         `;
     });
+}
+
+function showResults() {
+    hideAllScreens();
+    document.getElementById('rankingScreen').style.display = 'block';
+    loadResults();
+}
+
+async function loadResults() {
+    try {
+        // Mostrar loading
+        const podium = document.getElementById('podium');
+        const rankingList = document.getElementById('rankingList');
+        podium.innerHTML = '<div class="loading-spinner"></div><p>Cargando resultados...</p>';
+        rankingList.innerHTML = '';
+
+        if (!currentParty || !currentParty.results) {
+            podium.innerHTML = '<p>No hay resultados disponibles</p>';
+            return;
+        }
+
+        // Usar los datos de resultados ya cargados
+        const ranking = currentParty.results.map(user => ({
+            nombre: user.nombre,
+            foto_perfil: user.foto_perfil,
+            puntuacion: user.total_unidades,
+            fiestas_participadas: user.fiestas_participadas || 1
+        }));
+        
+        renderPodium(ranking);
+        renderRankingList(ranking);
+        
+        // Ocultar elementos de fiesta activa si existen
+        const partyInfo = document.querySelector('.party-info');
+        if (partyInfo) {
+            partyInfo.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('Error loading results:', error);
+        const podium = document.getElementById('podium');
+        podium.innerHTML = '<p>Error al cargar los resultados</p>';
+    }
 }
 
 // ===========================
@@ -1317,6 +1366,7 @@ function updateGeneralRanking(ranking) {
         
         item.innerHTML = `
             <div class="ranking-position ${positionClass}">${position}</div>
+            <div class="ranking-avatar">${generateUserAvatar(user, '40px')}</div>
             <div class="ranking-name">${user.nombre}</div>
             <div class="ranking-value">${user.total_unidades} unidades</div>
         `;
@@ -1394,6 +1444,7 @@ function update60MinRanking(ranking) {
         
         item.innerHTML = `
             <div class="ranking-position ${positionClass}">${position}</div>
+            <div class="ranking-avatar">${generateUserAvatar(user, '40px')}</div>
             <div class="ranking-name">${user.nombre}</div>
             <div class="ranking-value">${user.max_60min || 0} unidades/hora</div>
         `;
@@ -1592,7 +1643,6 @@ async function loadProfile() {
             displayProfile(data.user);
             loadFavoriteDrinks();
             loadUserStats();
-            loadDrinkTypes();
         } else {
             showError(data.message || 'Error al cargar el perfil');
         }
@@ -1686,35 +1736,21 @@ function displayFavoriteDrinks(favorites) {
     const container = document.getElementById('favoriteDrinks');
     
     if (favorites.length === 0) {
-        container.innerHTML = '<p class="text-muted">No tienes bebidas favoritas agregadas</p>';
+        container.innerHTML = '<p class="text-muted">Aún no has consumido bebidas suficientes para mostrar favoritas</p>';
         return;
     }
 
-    container.innerHTML = favorites.map(fav => `
+    container.innerHTML = favorites.map((fav, index) => `
         <div class="favorite-drink-item">
-            <span class="favorite-drink-name">${fav.nombre}</span>
-            <button class="remove-favorite" onclick="removeFavoriteDrink(${fav.id_tipo})" title="Eliminar favorita">
-                ✕
-            </button>
+            <div class="favorite-rank">#${index + 1}</div>
+            <div class="favorite-info">
+                <span class="favorite-drink-name">${fav.nombre}</span>
+                <div class="favorite-stats">
+                    <small>Consumido: ${fav.total_consumido} veces | Total: ${fav.veces_consumido} ocasiones</small>
+                </div>
+            </div>
         </div>
     `).join('');
-}
-
-async function loadDrinkTypes() {
-    try {
-        const response = await fetch('/api/drink-types');
-        const data = await response.json();
-
-        if (data.success) {
-            const select = document.getElementById('drinkTypeSelect');
-            select.innerHTML = '<option value="">Seleccionar bebida...</option>' +
-                data.types.map(type => 
-                    `<option value="${type.id_tipo}">${type.nombre}</option>`
-                ).join('');
-        }
-    } catch (error) {
-        console.error('Error loading drink types:', error);
-    }
 }
 
 async function loadUserStats() {
@@ -1723,7 +1759,7 @@ async function loadUserStats() {
         const data = await response.json();
 
         if (data.success) {
-            displayUserStats(data.stats);
+            displayUserStats(data.statistics);
         }
     } catch (error) {
         console.error('Error loading user stats:', error);
@@ -1732,7 +1768,7 @@ async function loadUserStats() {
 
 function displayUserStats(stats) {
     document.getElementById('totalParties').textContent = stats.total_fiestas_participadas || 0;
-    document.getElementById('totalUnits').textContent = (stats.total_unidades_consumidas || 0).toFixed(1);
+    document.getElementById('totalUnits').textContent = (parseFloat(stats.total_unidades_consumidas) || 0).toFixed(1);
     document.getElementById('bestPosition').textContent = stats.mejor_posicion ? `#${stats.mejor_posicion}` : '-';
     document.getElementById('currentStreak').textContent = stats.racha_actual || 0;
     document.getElementById('bestStreak').textContent = stats.mejor_racha || 0;
@@ -1804,6 +1840,34 @@ function cancelEditProfile() {
     toggleEditProfile();
 }
 
+// Helper function to generate user avatar HTML
+function generateUserAvatar(user, size = '50px') {
+    console.log('generateUserAvatar called with user:', user); // Debug log
+    if (user.foto_perfil && user.foto_perfil.trim() !== '') {
+        console.log('Using profile image:', user.foto_perfil); // Debug log
+        return `<img src="${user.foto_perfil}" alt="${user.nombre}" class="user-avatar-image" style="width: ${size}; height: ${size};">`;
+    } else {
+        console.log('Using initials for user:', user.nombre); // Debug log
+        const initials = user.nombre ? user.nombre.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+        const fontSize = Math.max(parseInt(size) * 0.4, 12);
+        return `<div class="user-avatar-initials" style="
+            width: ${size}; 
+            height: ${size}; 
+            font-size: ${fontSize}px;
+            background: #8A508F;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1;
+            flex-shrink: 0;
+        ">${initials}</div>`;
+    }
+}
+
 async function saveProfile() {
     try {
         const profileData = {
@@ -1850,18 +1914,52 @@ function selectProfileImage() {
 document.getElementById('profileImageInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            showError('La imagen debe ser menor a 2MB');
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit for original file
+            showError('La imagen debe ser menor a 5MB');
             return;
         }
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            uploadProfileImage(e.target.result);
+            compressAndUploadImage(e.target.result);
         };
         reader.readAsDataURL(file);
     }
 });
+
+function compressAndUploadImage(base64Image) {
+    const img = new Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Resize to max 300x300 while maintaining aspect ratio
+        const maxSize = 300;
+        let { width, height } = img;
+        
+        if (width > height) {
+            if (width > maxSize) {
+                height = (height * maxSize) / width;
+                width = maxSize;
+            }
+        } else {
+            if (height > maxSize) {
+                width = (width * maxSize) / height;
+                height = maxSize;
+            }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with 80% quality
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        uploadProfileImage(compressedBase64);
+    };
+    img.src = base64Image;
+}
 
 async function uploadProfileImage(base64Image) {
     try {
@@ -1870,7 +1968,7 @@ async function uploadProfileImage(base64Image) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ image: base64Image })
+            body: JSON.stringify({ foto_perfil: base64Image })
         });
 
         const data = await response.json();
@@ -1881,7 +1979,7 @@ async function uploadProfileImage(base64Image) {
             document.getElementById('profileInitials').style.display = 'none';
             showSuccess('Foto de perfil actualizada');
         } else {
-            showError(data.message || 'Error al subir la imagen');
+            showError(data.error || 'Error al subir la imagen');
         }
     } catch (error) {
         console.error('Error uploading profile image:', error);
@@ -1911,68 +2009,3 @@ async function removeProfileImage() {
     }
 }
 
-function toggleAddFavorite() {
-    const section = document.getElementById('addFavoriteSection');
-    const btn = document.getElementById('toggleFavoriteBtn');
-    
-    if (section.style.display === 'none' || !section.style.display) {
-        section.style.display = 'flex';
-        btn.textContent = '❌ Cancelar';
-    } else {
-        section.style.display = 'none';
-        btn.textContent = '➕ Agregar favorita';
-        document.getElementById('drinkTypeSelect').value = '';
-    }
-}
-
-async function addFavoriteDrink() {
-    const drinkTypeId = document.getElementById('drinkTypeSelect').value;
-    
-    if (!drinkTypeId) {
-        showError('Por favor selecciona una bebida');
-        return;
-    }
-
-    try {
-        const response = await fetch(`/api/user/${currentUser.id}/favorite-drinks`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ drink_type_id: drinkTypeId })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showSuccess('Bebida favorita agregada');
-            loadFavoriteDrinks();
-            toggleAddFavorite();
-        } else {
-            showError(data.message || 'Error al agregar bebida favorita');
-        }
-    } catch (error) {
-        console.error('Error adding favorite drink:', error);
-        showError('Error de conexión al agregar bebida favorita');
-    }
-}
-
-async function removeFavoriteDrink(drinkTypeId) {
-    try {
-        const response = await fetch(`/api/user/${currentUser.id}/favorite-drinks/${drinkTypeId}`, {
-            method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showSuccess('Bebida favorita eliminada');
-            loadFavoriteDrinks();
-        } else {
-            showError(data.message || 'Error al eliminar bebida favorita');
-        }
-    } catch (error) {
-        console.error('Error removing favorite drink:', error);
-        showError('Error de conexión al eliminar bebida favorita');
-    }
-}
